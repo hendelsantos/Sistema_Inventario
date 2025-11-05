@@ -7,7 +7,7 @@ class InventoryApp {
         this.initializeElements();
         this.bindEvents();
         this.loadDashboardStats();
-        this.loadItems();
+        this.applyFilters(); // Use the new filter system instead of loadItems
     }
 
     initializeElements() {
@@ -18,6 +18,9 @@ class InventoryApp {
         this.manualSubmitBtn = document.getElementById('manualSubmitBtn');
         this.cancelBtn = document.getElementById('cancelBtn');
         this.refreshBtn = document.getElementById('refreshBtn');
+        this.clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        this.applyFiltersBtn = document.getElementById('applyFiltersBtn');
+        this.exportFilteredBtn = document.getElementById('exportFilteredBtn');
         
         // Sections
         this.scannerSection = document.getElementById('scannerSection');
@@ -28,7 +31,21 @@ class InventoryApp {
         this.inventoryForm = document.getElementById('inventoryForm');
         this.manualCodeInput = document.getElementById('manualCode');
         this.itemQrCode = document.getElementById('itemQrCode');
-        this.searchInput = document.getElementById('searchInput');
+        
+        // Filter elements
+        this.filterQrCode = document.getElementById('filterQrCode');
+        this.filterDescription = document.getElementById('filterDescription');
+        this.filterLocation = document.getElementById('filterLocation');
+        this.filterStockType = document.getElementById('filterStockType');
+        this.filterDateFrom = document.getElementById('filterDateFrom');
+        this.filterDateTo = document.getElementById('filterDateTo');
+        this.filterMinStock = document.getElementById('filterMinStock');
+        this.filterMaxStock = document.getElementById('filterMaxStock');
+        
+        // Autocomplete containers
+        this.suggestionsQrCode = document.getElementById('suggestionsQrCode');
+        this.suggestionsDescription = document.getElementById('suggestionsDescription');
+        this.suggestionsLocation = document.getElementById('suggestionsLocation');
         
         // Stock inputs
         this.unrestrictInput = document.getElementById('unrestrict');
@@ -41,10 +58,12 @@ class InventoryApp {
         this.totalStockEl = document.getElementById('totalStock');
         this.todayCountsEl = document.getElementById('todayCounts');
         
-        // Tables
+        // Tables and results
         this.itemsTableBody = document.getElementById('itemsTableBody');
         this.loadingIndicator = document.getElementById('loadingIndicator');
         this.emptyState = document.getElementById('emptyState');
+        this.resultsCount = document.getElementById('resultsCount');
+        this.paginationContainer = document.getElementById('paginationContainer');
         
         // Modal
         this.exportModal = document.getElementById('exportModal');
@@ -57,6 +76,11 @@ class InventoryApp {
         // Toast
         this.toast = document.getElementById('toast');
         this.toastMessage = document.getElementById('toastMessage');
+        
+        // Pagination state
+        this.currentPage = 1;
+        this.itemsPerPage = 20;
+        this.totalResults = 0;
     }
 
     bindEvents() {
@@ -75,6 +99,24 @@ class InventoryApp {
         // Stock calculation
         [this.unrestrictInput, this.focInput, this.rfbInput].forEach(input => {
             input.addEventListener('input', () => this.updateTotal());
+        });
+        
+        // Filter events
+        this.clearFiltersBtn.addEventListener('click', () => this.clearFilters());
+        this.applyFiltersBtn.addEventListener('click', () => this.applyFilters());
+        this.refreshBtn.addEventListener('click', () => this.refreshData());
+        this.exportFilteredBtn.addEventListener('click', () => this.exportFilteredResults());
+        
+        // Autocomplete events
+        this.setupAutocomplete('filterQrCode', 'qr_code', this.suggestionsQrCode);
+        this.setupAutocomplete('filterDescription', 'description', this.suggestionsDescription);
+        this.setupAutocomplete('filterLocation', 'location', this.suggestionsLocation);
+        
+        // Real-time filter changes
+        [this.filterQrCode, this.filterDescription, this.filterLocation, 
+         this.filterStockType, this.filterDateFrom, this.filterDateTo,
+         this.filterMinStock, this.filterMaxStock].forEach(input => {
+            input.addEventListener('change', () => this.debounceFilter());
         });
         
         // Search
@@ -375,24 +417,21 @@ class InventoryApp {
     }
 
     async loadItems(search = '') {
-        try {
-            this.loadingIndicator.style.display = 'block';
-            this.emptyState.style.display = 'none';
-            
-            const url = new URL('/api/inventory/items', window.location.origin);
-            if (search) url.searchParams.append('search', search);
-            
-            const response = await fetch(url);
-            const items = await response.json();
-            
-            this.displayItems(items);
-            
-        } catch (error) {
-            console.error('Erro ao carregar itens:', error);
-            this.showToast('Erro ao carregar itens', 'error');
-        } finally {
-            this.loadingIndicator.style.display = 'none';
+        // Redirect to new filter system
+        if (search) {
+            this.filterQrCode.value = search;
+            this.filterDescription.value = search;
+            this.filterLocation.value = search;
         }
+        this.applyFilters();
+    }
+
+    debounceSearch() {
+        // Legacy method - redirect to new filter system
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.applyFilters();
+        }, 300);
     }
 
     displayItems(items) {
@@ -458,13 +497,6 @@ class InventoryApp {
         }
     }
 
-    debounceSearch() {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            this.loadItems(this.searchInput.value);
-        }, 300);
-    }
-
     showExportModal() {
         // Set default dates (last 30 days)
         const endDate = new Date();
@@ -510,6 +542,246 @@ class InventoryApp {
         setTimeout(() => {
             this.toast.style.display = 'none';
         }, 3000);
+    }
+
+    // Autocomplete functionality
+    setupAutocomplete(inputId, field, suggestionsContainer) {
+        const input = document.getElementById(inputId);
+        let currentFocus = -1;
+        
+        input.addEventListener('input', async () => {
+            const term = input.value;
+            if (term.length < 2) {
+                this.hideSuggestions(suggestionsContainer);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/inventory/suggestions/${field}?term=${encodeURIComponent(term)}`);
+                const suggestions = await response.json();
+                
+                this.showSuggestions(suggestionsContainer, suggestions, input);
+            } catch (error) {
+                console.error('Erro ao buscar sugestões:', error);
+            }
+        });
+        
+        input.addEventListener('keydown', (e) => {
+            const suggestions = suggestionsContainer.querySelectorAll('.suggestion-item');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus++;
+                if (currentFocus >= suggestions.length) currentFocus = 0;
+                this.setActiveSuggestion(suggestions, currentFocus);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus--;
+                if (currentFocus < 0) currentFocus = suggestions.length - 1;
+                this.setActiveSuggestion(suggestions, currentFocus);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentFocus > -1 && suggestions[currentFocus]) {
+                    input.value = suggestions[currentFocus].textContent;
+                    this.hideSuggestions(suggestionsContainer);
+                    this.debounceFilter();
+                }
+            } else if (e.key === 'Escape') {
+                this.hideSuggestions(suggestionsContainer);
+            }
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                this.hideSuggestions(suggestionsContainer);
+            }
+        });
+    }
+    
+    showSuggestions(container, suggestions, input) {
+        container.innerHTML = '';
+        
+        if (suggestions.length === 0) {
+            this.hideSuggestions(container);
+            return;
+        }
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.textContent = suggestion;
+            
+            item.addEventListener('click', () => {
+                input.value = suggestion;
+                this.hideSuggestions(container);
+                this.debounceFilter();
+            });
+            
+            container.appendChild(item);
+        });
+        
+        container.classList.add('show');
+    }
+    
+    hideSuggestions(container) {
+        container.classList.remove('show');
+        container.innerHTML = '';
+    }
+    
+    setActiveSuggestion(suggestions, index) {
+        suggestions.forEach((item, i) => {
+            item.classList.toggle('highlighted', i === index);
+        });
+    }
+    
+    // Filter functionality
+    clearFilters() {
+        this.filterQrCode.value = '';
+        this.filterDescription.value = '';
+        this.filterLocation.value = '';
+        this.filterStockType.value = '';
+        this.filterDateFrom.value = '';
+        this.filterDateTo.value = '';
+        this.filterMinStock.value = '';
+        this.filterMaxStock.value = '';
+        
+        this.currentPage = 1;
+        this.applyFilters();
+    }
+    
+    applyFilters() {
+        this.currentPage = 1;
+        this.loadFilteredItems();
+    }
+    
+    debounceFilter() {
+        clearTimeout(this.filterTimeout);
+        this.filterTimeout = setTimeout(() => {
+            this.applyFilters();
+        }, 500);
+    }
+    
+    refreshData() {
+        this.loadDashboardStats();
+        this.applyFilters();
+    }
+    
+    async loadFilteredItems() {
+        try {
+            this.loadingIndicator.style.display = 'block';
+            this.emptyState.style.display = 'none';
+            this.exportFilteredBtn.style.display = 'none';
+            
+            const params = new URLSearchParams({
+                limit: this.itemsPerPage,
+                offset: (this.currentPage - 1) * this.itemsPerPage
+            });
+            
+            // Add filters
+            if (this.filterQrCode.value) params.append('qr_code', this.filterQrCode.value);
+            if (this.filterDescription.value) params.append('description', this.filterDescription.value);
+            if (this.filterLocation.value) params.append('location', this.filterLocation.value);
+            if (this.filterStockType.value) params.append('stock_type', this.filterStockType.value);
+            if (this.filterDateFrom.value) params.append('date_from', this.filterDateFrom.value);
+            if (this.filterDateTo.value) params.append('date_to', this.filterDateTo.value);
+            if (this.filterMinStock.value) params.append('min_stock', this.filterMinStock.value);
+            if (this.filterMaxStock.value) params.append('max_stock', this.filterMaxStock.value);
+            
+            const response = await fetch(`/api/inventory/search?${params}`);
+            const data = await response.json();
+            
+            this.totalResults = data.total;
+            this.displayItems(data.items);
+            this.updateResultsInfo();
+            this.updatePagination();
+            
+            if (data.items.length > 0) {
+                this.exportFilteredBtn.style.display = 'inline-flex';
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar itens filtrados:', error);
+            this.showToast('Erro ao carregar resultados', 'error');
+        } finally {
+            this.loadingIndicator.style.display = 'none';
+        }
+    }
+    
+    updateResultsInfo() {
+        const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+        const end = Math.min(this.currentPage * this.itemsPerPage, this.totalResults);
+        
+        if (this.totalResults === 0) {
+            this.resultsCount.textContent = 'Nenhum resultado encontrado';
+        } else {
+            this.resultsCount.textContent = `Mostrando ${start}-${end} de ${this.totalResults} resultados`;
+        }
+    }
+    
+    updatePagination() {
+        const totalPages = Math.ceil(this.totalResults / this.itemsPerPage);
+        this.paginationContainer.innerHTML = '';
+        
+        if (totalPages <= 1) return;
+        
+        // Previous button
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'pagination-btn';
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.disabled = this.currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.loadFilteredItems();
+            }
+        });
+        this.paginationContainer.appendChild(prevBtn);
+        
+        // Page info
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'pagination-info';
+        pageInfo.textContent = `Página ${this.currentPage} de ${totalPages}`;
+        this.paginationContainer.appendChild(pageInfo);
+        
+        // Next button
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'pagination-btn';
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = this.currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+            if (this.currentPage < totalPages) {
+                this.currentPage++;
+                this.loadFilteredItems();
+            }
+        });
+        this.paginationContainer.appendChild(nextBtn);
+    }
+    
+    async exportFilteredResults() {
+        try {
+            const params = new URLSearchParams();
+            
+            // Add current filters
+            if (this.filterQrCode.value) params.append('qr_code', this.filterQrCode.value);
+            if (this.filterDescription.value) params.append('description', this.filterDescription.value);
+            if (this.filterLocation.value) params.append('location', this.filterLocation.value);
+            if (this.filterStockType.value) params.append('stock_type', this.filterStockType.value);
+            if (this.filterDateFrom.value) params.append('date_from', this.filterDateFrom.value);
+            if (this.filterDateTo.value) params.append('date_to', this.filterDateTo.value);
+            if (this.filterMinStock.value) params.append('min_stock', this.filterMinStock.value);
+            if (this.filterMaxStock.value) params.append('max_stock', this.filterMaxStock.value);
+            
+            // Export to Excel with current filters
+            const url = `/api/export/excel?${params}`;
+            window.open(url, '_blank');
+            
+            this.showToast('Exportação dos resultados filtrados iniciada', 'success');
+            
+        } catch (error) {
+            console.error('Erro na exportação filtrada:', error);
+            this.showToast('Erro na exportação', 'error');
+        }
     }
 }
 
