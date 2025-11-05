@@ -101,27 +101,70 @@ class InventoryApp {
             if (this.qrCodeScanner) {
                 await this.qrCodeScanner.clear();
             }
+
+            // Verificar se está em HTTPS (necessário para câmera no mobile)
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                this.showToast('⚠️ HTTPS necessário para usar câmera no celular', 'error');
+                return;
+            }
             
-            this.qrCodeScanner = new Html5QrcodeScanner('qr-reader', {
+            // Configurações otimizadas para mobile
+            const config = {
                 fps: 10,
-                qrbox: { width: 300, height: 300 },
-                aspectRatio: 1.0
-            });
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    // Tamanho dinâmico baseado na tela
+                    const minEdgePercentage = 0.7;
+                    const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                    const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                    return {
+                        width: qrboxSize,
+                        height: qrboxSize
+                    };
+                },
+                aspectRatio: 1.0,
+                disableFlip: false, // Permitir flip da câmera
+                videoConstraints: {
+                    facingMode: { ideal: "environment" } // Câmera traseira preferencial
+                },
+                rememberLastUsedCamera: true,
+                showTorchButtonIfSupported: true, // Botão de flash se disponível
+                showZoomSliderIfSupported: true,  // Controle de zoom se disponível
+                defaultZoomValueIfSupported: 2,   // Zoom padrão
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                }
+            };
+            
+            this.qrCodeScanner = new Html5QrcodeScanner('qr-reader', config);
             
             this.qrCodeScanner.render(
                 (decodedText) => this.handleQrCodeScan(decodedText),
                 (error) => {
-                    // Ignorar erros de scan contínuo
-                    if (!error.includes('No QR code found')) {
+                    // Apenas logar erros significativos
+                    if (!error.includes('No QR code found') && 
+                        !error.includes('NotFoundException') &&
+                        !error.includes('code not found')) {
                         console.warn('QR scan error:', error);
                     }
                 }
             );
             
             this.isScanning = true;
+            this.showToast('📱 Scanner ativo - aponte para o QR code', 'success');
+            
         } catch (error) {
             console.error('Erro ao iniciar scanner:', error);
-            this.showToast('Erro ao acessar câmera', 'error');
+            
+            // Mensagens de erro específicas
+            if (error.name === 'NotAllowedError') {
+                this.showToast('❌ Permissão da câmera negada. Ative nas configurações do navegador.', 'error');
+            } else if (error.name === 'NotFoundError') {
+                this.showToast('📷 Nenhuma câmera encontrada no dispositivo.', 'error');
+            } else if (error.name === 'NotSupportedError') {
+                this.showToast('❌ Navegador não suporta acesso à câmera.', 'error');
+            } else {
+                this.showToast('❌ Erro ao acessar câmera: ' + error.message, 'error');
+            }
         }
     }
 
@@ -140,23 +183,55 @@ class InventoryApp {
     }
 
     handleManualCode() {
-        const code = this.manualCodeInput.value.trim();
-        if (code.length === 17) {
-            this.handleQrCodeScan(code);
-        } else {
-            this.showToast('O código deve ter exatamente 17 caracteres', 'error');
+        const code = this.manualCodeInput.value.trim().replace(/\s+/g, '').toUpperCase();
+        
+        if (code.length === 0) {
+            this.showToast('Digite um código', 'error');
+            return;
         }
+        
+        if (code.length !== 17) {
+            this.showToast(`Código deve ter 17 caracteres. Atual: ${code.length}`, 'error');
+            this.manualCodeInput.focus();
+            return;
+        }
+        
+        if (!/^[A-Za-z0-9]+$/.test(code)) {
+            this.showToast('Código deve conter apenas letras e números', 'error');
+            this.manualCodeInput.focus();
+            return;
+        }
+        
+        this.handleQrCodeScan(code);
     }
 
     async handleQrCodeScan(qrCode) {
+        // Limpar espaços e caracteres especiais
+        qrCode = qrCode.trim().replace(/\s+/g, '');
+        
+        console.log('QR Code escaneado:', qrCode, 'Tamanho:', qrCode.length);
+        
         if (qrCode.length !== 17) {
-            this.showToast('Código QR inválido. Deve ter 17 caracteres.', 'error');
+            this.showToast(`❌ Código inválido! Tem ${qrCode.length} caracteres, precisa ter 17.`, 'error');
+            
+            // Não parar o scanner, continuar tentando
+            setTimeout(() => {
+                this.showToast('📱 Continue escaneando...', 'info');
+            }, 2000);
             return;
         }
 
-        this.currentQrCode = qrCode;
+        // Validar se contém apenas caracteres alfanuméricos
+        if (!/^[A-Za-z0-9]+$/.test(qrCode)) {
+            this.showToast('❌ Código deve conter apenas letras e números', 'error');
+            return;
+        }
+
+        this.currentQrCode = qrCode.toUpperCase(); // Padronizar em maiúsculo
+        this.showToast('✅ QR Code válido escaneado!', 'success');
+        
         await this.stopQrScanner();
-        await this.loadItemData(qrCode);
+        await this.loadItemData(this.currentQrCode);
         this.showItemForm();
     }
 

@@ -1,0 +1,23 @@
+# Dockerfile para desenvolvimento
+FROM node:18-alpine
+
+# Instalar dependências do sistema
+RUN apk add --no-cache python3 make g++ curl
+
+# Instalar nodemon globalmente
+RUN npm install -g nodemon
+
+# Criar diretório da aplicação
+WORKDIR /app
+
+# Copiar arquivos de dependências
+COPY package*.json ./
+
+# Instalar todas as dependências (incluindo dev)
+RUN npm install
+
+# Expor porta
+EXPOSE 3000
+
+# Comando de desenvolvimento
+CMD ["npm", "run", "dev"]
