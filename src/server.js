@@ -4,21 +4,36 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { initDatabase } = require('./database/database');
 
+// Carregar variáveis de ambiente se o arquivo .env existir
+try {
+    require('dotenv').config();
+} catch (error) {
+    // dotenv não é obrigatório em produção
+}
+
 const inventoryRoutes = require('./routes/inventory');
 const exportRoutes = require('./routes/export');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100 // máximo 100 requests por IP por janela de tempo
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
+    max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // máximo requests por IP por janela de tempo
+    message: { error: 'Muitas tentativas. Tente novamente em alguns minutos.' }
 });
 
 // Middlewares
 app.use(limiter);
-app.use(cors());
+
+// CORS configurável
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN === '*' ? true : process.env.CORS_ORIGIN?.split(',') || true,
+    credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,12 +49,22 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
+// Health check para Railway
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        env: NODE_ENV,
+        uptime: process.uptime()
+    });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ 
         error: 'Algo deu errado!', 
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Erro interno do servidor'
+        message: NODE_ENV === 'development' ? err.message : 'Erro interno do servidor'
     });
 });
 
@@ -54,10 +79,23 @@ async function startServer() {
         await initDatabase();
         console.log('Banco de dados inicializado');
         
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`Servidor rodando na porta ${PORT}`);
-            console.log(`Acesse: http://localhost:${PORT}`);
+            console.log(`Ambiente: ${NODE_ENV}`);
+            if (NODE_ENV === 'development') {
+                console.log(`Acesse: http://localhost:${PORT}`);
+            }
         });
+
+        // Graceful shutdown
+        process.on('SIGTERM', () => {
+            console.log('SIGTERM recebido, fechando servidor...');
+            server.close(() => {
+                console.log('Servidor fechado.');
+                process.exit(0);
+            });
+        });
+
     } catch (error) {
         console.error('Erro ao inicializar servidor:', error);
         process.exit(1);
