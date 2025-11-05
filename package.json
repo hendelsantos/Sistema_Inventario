@@ -8,11 +8,6 @@
     "dev": "nodemon src/server.js",
     "init-db": "node src/database/init.js",
     "build": "npm run init-db",
-    "railway:start": "npm run build && npm start",
-    "docker:build": "docker build -t sistema-inventario .",
-    "docker:run": "docker run -p 3000:3000 sistema-inventario",
-    "docker:dev": "docker-compose --profile dev up",
-    "docker:prod": "docker-compose up",
     "test": "echo \"No tests specified\" && exit 0",
     "postinstall": "npm run init-db"
   },

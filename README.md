@@ -37,39 +37,21 @@ Um sistema web completo para gerenciamento de inventário utilizando leitura de 
 - **QR Scanner**: html5-qrcode library
 - **Exportação**: SheetJS (xlsx)
 - **UI/UX**: Font Awesome, Google Fonts
+- **Deploy**: Railway (Nixpacks)
 
-## 📦 Instalação
+## � Deploy
 
-1. **Clone o repositório**:
-   ```bash
-   git clone <url-do-repositorio>
-   cd Sistema_Inventario
-   ```
+### Railway (Recomendado)
+1. Conecte seu repositório GitHub ao Railway
+2. Deploy automático com Nixpacks
+3. HTTPS automático para scanner QR mobile
 
-2. **Instale as dependências**:
-   ```bash
-   npm install
-   ```
-
-3. **Initialize o banco de dados**:
-   ```bash
-   npm run init-db
-   ```
-
-4. **Inicie o servidor**:
-   ```bash
-   npm start
-   ```
-
-5. **Para desenvolvimento** (com auto-reload):
-   ```bash
-   npm run dev
-   ```
-
-6. **Acesse o sistema**:
-   ```
-   http://localhost:3000
-   ```
+### Desenvolvimento Local
+```bash
+npm install
+npm start
+# Acesse: http://localhost:3000
+```
 
 ## 🗄️ Estrutura do Projeto
 

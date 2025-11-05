@@ -3,9 +3,10 @@
 ## 🚀 Guia de Deploy Rápido
 
 ### 1. Preparação
-✅ Projeto já configurado para Railway
+✅ Projeto otimizado para Railway + Nixpacks
 ✅ Variáveis de ambiente configuradas
 ✅ Scripts de build otimizados
+✅ Docker removido (Nixpacks é melhor para Node.js)
 
 ### 2. Deploy via GitHub
 1. **Conecte seu repositório**:
@@ -17,22 +18,14 @@
 
 2. **Configuração Automática**:
    - Railway detectará automaticamente Node.js
-   - Usará as configurações do `railway.json`
+   - Usará **Nixpacks** (mais eficiente que Docker)
    - Executará `npm install` e `npm run build`
+   - SQLite será configurado automaticamente
 
-### 3. Variáveis de Ambiente (Opcional)
-No painel do Railway, configure se necessário:
-```
-NODE_ENV=production
-PORT=(será definido automaticamente pelo Railway)
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX=100
-CORS_ORIGIN=*
-```
-
-### 4. Deploy Completo
+### 3. Deploy Completo
 - ✅ Database SQLite será criado automaticamente
 - ✅ Servidor iniciará na porta fornecida pelo Railway
+- ✅ **HTTPS automático** (essencial para scanner QR mobile)
 - ✅ Health check disponível em `/health`
 - ✅ Interface web acessível na URL fornecida
 
@@ -44,7 +37,7 @@ CORS_ORIGIN=*
 
 ## 📱 Funcionalidades em Produção
 
-✅ **Scanner QR via HTTPS**  
+✅ **Scanner QR via HTTPS** (funciona no celular)  
 ✅ **Interface responsiva**  
 ✅ **Banco SQLite persistente**  
 ✅ **Exportação Excel/JSON**  
@@ -57,29 +50,21 @@ Após o deploy, o Railway fornecerá uma URL como:
 https://seu-app.railway.app
 ```
 
-## 🔒 Segurança
+## � Teste Scanner QR
 
-- Rate limiting configurado
-- CORS habilitado
-- Error handling robusto
-- Health checks ativos
-
-## 📊 Monitoramento
-
-- Health check: `GET /health`
-- Logs disponíveis no painel Railway
-- Métricas de CPU/RAM no dashboard
+1. Acesse a URL HTTPS fornecida pelo Railway
+2. Clique em "Escanear QR"
+3. Permita acesso à câmera
+4. Escaneie códigos QR de 17 caracteres
 
 ## 🚨 Solução de Problemas
 
 **Build falha?**
-- Verifique se Node.js ≥18 está sendo usado
-- Confirme se `package.json` está correto
+- Railway agora usa Nixpacks (sem Docker)
+- Builds mais rápidos e estáveis
+- SQLite compila automaticamente
 
-**Banco não funciona?**
-- Railway criará automaticamente o diretório
-- SQLite é criado no primeiro acesso
-
-**Scanner QR não funciona?**
-- Confirme se a URL usa HTTPS
-- Dispositivos móveis precisam de HTTPS para câmera
+**Scanner não funciona?**
+- ✅ HTTPS automático no Railway
+- ✅ Permita acesso à câmera no navegador
+- ✅ Use códigos QR de exatamente 17 caracteres
