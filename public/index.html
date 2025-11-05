@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventário</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-boxes"></i> Sistema de Inventário</h1>
+                <div class="header-actions">
+                    <button id="scanBtn" class="btn btn-primary">
+                        <i class="fas fa-qrcode"></i> Escanear QR
+                    </button>
+                    <button id="exportBtn" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Dashboard Cards -->
+            <div class="dashboard-cards">
+                <div class="card stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalItems">0</h3>
+                        <p>Total de Itens</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalStock">0</h3>
+                        <p>Estoque Total</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="todayCounts">0</h3>
+                        <p>Contagens Hoje</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Scanner Section -->
+            <div id="scannerSection" class="card scanner-section" style="display: none;">
+                <div class="scanner-header">
+                    <h2><i class="fas fa-qrcode"></i> Scanner QR Code</h2>
+                    <button id="closeScannerBtn" class="btn btn-text">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="qr-reader" class="qr-reader"></div>
+                <div class="scanner-manual">
+                    <p>Ou digite o código manualmente:</p>
+                    <div class="input-group">
+                        <input type="text" id="manualCode" placeholder="Digite o código de 17 caracteres" maxlength="17">
+                        <button id="manualSubmitBtn" class="btn btn-primary">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item Form -->
+            <div id="itemForm" class="card item-form" style="display: none;">
+                <div class="form-header">
+                    <h2><i class="fas fa-edit"></i> Dados do Item</h2>
+                    <span id="itemQrCode" class="qr-code-display"></span>
+                </div>
+                
+                <form id="inventoryForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="description">
+                                <i class="fas fa-tag"></i> Descrição
+                            </label>
+                            <input type="text" id="description" name="description" placeholder="Descrição do item">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="location">
+                                <i class="fas fa-map-marker-alt"></i> Localização
+                            </label>
+                            <input type="text" id="location" name="location" placeholder="Localização do item">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">
+                            <i class="fas fa-sticky-note"></i> Anotações
+                        </label>
+                        <textarea id="notes" name="notes" placeholder="Observações adicionais" rows="3"></textarea>
+                    </div>
+
+                    <div class="stock-section">
+                        <h3><i class="fas fa-warehouse"></i> Quantidades de Estoque</h3>
+                        <div class="stock-grid">
+                            <div class="stock-item">
+                                <label for="unrestrict">Unrestrict</label>
+                                <input type="number" id="unrestrict" name="unrestrict" min="0" value="0">
+                            </div>
+                            <div class="stock-item">
+                                <label for="foc">FOC</label>
+                                <input type="number" id="foc" name="foc" min="0" value="0">
+                            </div>
+                            <div class="stock-item">
+                                <label for="rfb">RFB</label>
+                                <input type="number" id="rfb" name="rfb" min="0" value="0">
+                            </div>
+                            <div class="stock-item total">
+                                <label>Total</label>
+                                <span id="totalDisplay">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="cancelBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salvar Contagem
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Historical Data -->
+                <div id="historySection" class="history-section" style="display: none;">
+                    <h3><i class="fas fa-history"></i> Histórico de Contagens</h3>
+                    <div id="historyList" class="history-list"></div>
+                </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="card items-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Lista de Itens</h2>
+                    <div class="search-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Buscar por código, descrição ou localização...">
+                        </div>
+                        <button id="refreshBtn" class="btn btn-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="itemsTable" class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Código QR</th>
+                                <th>Descrição</th>
+                                <th>Localização</th>
+                                <th>Unrestrict</th>
+                                <th>FOC</th>
+                                <th>RFB</th>
+                                <th>Total</th>
+                                <th>Última Contagem</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Items will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="loadingIndicator" class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i> Carregando...
+                </div>
+                
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h3>Nenhum item encontrado</h3>
+                    <p>Use o scanner QR para adicionar o primeiro item ao inventário.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-download"></i> Exportar Dados</h3>
+                <button id="closeExportModal" class="btn btn-icon">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="startDate">Data Inicial</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">Data Final</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div class="export-actions">
+                    <button id="exportExcelBtn" class="btn btn-primary">
+                        <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button id="exportJsonBtn" class="btn btn-secondary">
+                        <i class="fas fa-file-code"></i> Exportar JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast" style="display: none;">
+        <div class="toast-content">
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

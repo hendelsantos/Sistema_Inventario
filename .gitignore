@@ -1,0 +1,10 @@
+node_modules/
+*.log
+.env
+database/*.db
+exports/*.xlsx
+exports/*.json
+.DS_Store
+.vscode/
+*.tmp
+*.temp
