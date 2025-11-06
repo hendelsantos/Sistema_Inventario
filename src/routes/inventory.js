@@ -454,4 +454,188 @@ router.delete('/count/:countId', (req, res) => {
     );
 });
 
+// GET - Estatísticas gerais para dashboard de resultados
+router.get('/stats', (req, res) => {
+    const { startDate, endDate, location } = req.query;
+
+    // Query para estatísticas gerais
+    let baseQuery = `
+        SELECT 
+            COUNT(DISTINCT i.qr_code) as total_items,
+            COUNT(sc.id) as total_counts,
+            SUM(sc.unrestrict) as total_unrestrict,
+            SUM(sc.foc) as total_foc, 
+            SUM(sc.rfb) as total_rfb,
+            SUM(sc.total) as grand_total,
+            AVG(sc.total) as avg_per_item,
+            MIN(sc.count_date) as first_count,
+            MAX(sc.count_date) as last_count
+        FROM stock_counts sc
+        JOIN items i ON sc.item_id = i.id
+        WHERE 1=1
+    `;
+
+    const params = [];
+
+    // Aplicar filtros de data
+    if (startDate) {
+        baseQuery += ` AND DATE(sc.count_date) >= DATE(?)`;
+        params.push(startDate);
+    }
+    if (endDate) {
+        baseQuery += ` AND DATE(sc.count_date) <= DATE(?)`;
+        params.push(endDate);
+    }
+    if (location) {
+        baseQuery += ` AND i.location LIKE ?`;
+        params.push(`%${location}%`);
+    }
+
+    // Query para contagens por categoria
+    let categoryQuery = `
+        SELECT 
+            'Unrestrict' as category,
+            SUM(unrestrict) as total,
+            COUNT(CASE WHEN unrestrict > 0 THEN 1 END) as items_with_stock
+        FROM stock_counts sc
+        JOIN items i ON sc.item_id = i.id
+        WHERE 1=1
+    `;
+
+    if (startDate) {
+        categoryQuery += ` AND DATE(sc.count_date) >= DATE(?)`;
+    }
+    if (endDate) {
+        categoryQuery += ` AND DATE(sc.count_date) <= DATE(?)`;
+    }
+    if (location) {
+        categoryQuery += ` AND i.location LIKE ?`;
+    }
+
+    categoryQuery += `
+        UNION ALL
+        SELECT 
+            'FOC' as category,
+            SUM(foc) as total,
+            COUNT(CASE WHEN foc > 0 THEN 1 END) as items_with_stock
+        FROM stock_counts sc
+        JOIN items i ON sc.item_id = i.id
+        WHERE 1=1
+    `;
+
+    if (startDate) {
+        categoryQuery += ` AND DATE(sc.count_date) >= DATE(?)`;
+    }
+    if (endDate) {
+        categoryQuery += ` AND DATE(sc.count_date) <= DATE(?)`;
+    }
+    if (location) {
+        categoryQuery += ` AND i.location LIKE ?`;
+    }
+
+    categoryQuery += `
+        UNION ALL
+        SELECT 
+            'RFB' as category,
+            SUM(rfb) as total,
+            COUNT(CASE WHEN rfb > 0 THEN 1 END) as items_with_stock
+        FROM stock_counts sc
+        JOIN items i ON sc.item_id = i.id
+        WHERE 1=1
+    `;
+
+    if (startDate) {
+        categoryQuery += ` AND DATE(sc.count_date) >= DATE(?)`;
+    }
+    if (endDate) {
+        categoryQuery += ` AND DATE(sc.count_date) <= DATE(?)`;
+    }
+    if (location) {
+        categoryQuery += ` AND i.location LIKE ?`;
+    }
+
+    // Duplicar params para cada UNION
+    const categoryParams = [...params, ...params, ...params];
+
+    // Query para contagens por localização
+    let locationQuery = `
+        SELECT 
+            i.location,
+            COUNT(DISTINCT i.qr_code) as total_items,
+            SUM(sc.unrestrict) as total_unrestrict,
+            SUM(sc.foc) as total_foc,
+            SUM(sc.rfb) as total_rfb,
+            SUM(sc.total) as location_total
+        FROM stock_counts sc
+        JOIN items i ON sc.item_id = i.id
+        WHERE 1=1
+    `;
+
+    if (startDate) {
+        locationQuery += ` AND DATE(sc.count_date) >= DATE(?)`;
+    }
+    if (endDate) {
+        locationQuery += ` AND DATE(sc.count_date) <= DATE(?)`;
+    }
+    if (location) {
+        locationQuery += ` AND i.location LIKE ?`;
+    }
+
+    locationQuery += `
+        GROUP BY i.location
+        ORDER BY location_total DESC
+        LIMIT 10
+    `;
+
+    // Executar queries em paralelo
+    const results = {};
+    let completed = 0;
+    const totalQueries = 3;
+
+    // Query geral
+    db.get(baseQuery, params, (err, generalStats) => {
+        if (err) {
+            console.error('Erro nas estatísticas gerais:', err);
+            results.general = null;
+        } else {
+            results.general = generalStats;
+        }
+        
+        completed++;
+        if (completed === totalQueries) {
+            res.json(results);
+        }
+    });
+
+    // Query por categoria
+    db.all(categoryQuery, categoryParams, (err, categoryStats) => {
+        if (err) {
+            console.error('Erro nas estatísticas por categoria:', err);
+            results.categories = [];
+        } else {
+            results.categories = categoryStats;
+        }
+        
+        completed++;
+        if (completed === totalQueries) {
+            res.json(results);
+        }
+    });
+
+    // Query por localização
+    db.all(locationQuery, params, (err, locationStats) => {
+        if (err) {
+            console.error('Erro nas estatísticas por localização:', err);
+            results.locations = [];
+        } else {
+            results.locations = locationStats;
+        }
+        
+        completed++;
+        if (completed === totalQueries) {
+            res.json(results);
+        }
+    });
+});
+
 module.exports = router;

@@ -1,0 +1,352 @@
+/* ===== SEÇÃO DE RESULTADOS DA CONTAGEM ===== */
+.results-section {
+    margin: 1.5rem 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.section-header h2 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group input {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: var(--input-bg, white);
+    color: var(--text-primary);
+}
+
+.filter-group input:focus {
+    outline: none;
+    border-color: var(--primary-color, #2a5298);
+    box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.1);
+}
+
+/* Stats Overview Cards */
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg, white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.highlight {
+    background: linear-gradient(135deg, var(--primary-color, #2a5298) 0%, var(--secondary-color, #1e3c72) 100%);
+    color: white;
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: rgba(42, 82, 152, 0.1);
+    color: var(--primary-color, #2a5298);
+}
+
+.stat-card.highlight .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.stat-content h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--primary-color, #2a5298);
+}
+
+.stat-card.highlight .stat-content h3 {
+    color: white;
+}
+
+.stat-content p {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #666);
+    margin: 0;
+}
+
+.stat-card.highlight .stat-content p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Category Stats */
+.category-stats {
+    margin-bottom: 2rem;
+}
+
+.category-stats h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.category-card {
+    background: var(--card-bg, white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    border-left: 4px solid;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+}
+
+.category-card.unrestrict {
+    border-left-color: #28a745;
+}
+
+.category-card.foc {
+    border-left-color: #ffc107;
+}
+
+.category-card.rfb {
+    border-left-color: #dc3545;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.category-header h4 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.category-header i {
+    font-size: 1.2rem;
+}
+
+.category-card.unrestrict .category-header i {
+    color: #28a745;
+}
+
+.category-card.foc .category-header i {
+    color: #ffc107;
+}
+
+.category-card.rfb .category-header i {
+    color: #dc3545;
+}
+
+.category-value span {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.category-value small {
+    color: var(--text-secondary, #666);
+    font-size: 0.8rem;
+}
+
+/* Location Stats */
+.location-stats {
+    margin-bottom: 2rem;
+}
+
+.location-stats h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.locations-list {
+    background: var(--card-bg, white);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.location-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color, #eee);
+    transition: background-color 0.2s ease;
+}
+
+.location-item:last-child {
+    border-bottom: none;
+}
+
+.location-item:hover {
+    background: var(--hover-bg, #f8f9fa);
+}
+
+.location-info h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.location-info p {
+    color: var(--text-secondary, #666);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.location-stats-summary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.location-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.location-stat span {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.location-stat small {
+    color: var(--text-secondary, #666);
+    font-size: 0.75rem;
+}
+
+/* Period Info */
+.period-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.period-card {
+    background: var(--card-bg, white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.period-card i {
+    color: var(--primary-color, #2a5298);
+    font-size: 1.5rem;
+}
+
+.period-card div {
+    flex: 1;
+}
+
+.period-card strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.period-card span {
+    color: var(--text-secondary, #666);
+}
+
+/* Loading State */
+.loading {
+    text-align: center;
+    color: var(--text-secondary, #666);
+    padding: 2rem;
+    font-style: italic;
+}
+
+/* Responsive adjustments for results */
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .section-actions {
+        justify-content: center;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-group input {
+        width: 100%;
+    }
+    
+    .stats-overview {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .location-stats-summary {
+        justify-content: center;
+    }
+}

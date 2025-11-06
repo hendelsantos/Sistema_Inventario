@@ -27,6 +27,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/results-section.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -41,6 +42,9 @@
                     </button>
                     <button id="exportBtn" class="btn btn-secondary">
                         <i class="fas fa-download"></i> Exportar
+                    </button>
+                    <button id="resultsBtn" class="btn btn-accent">
+                        <i class="fas fa-chart-bar"></i> Resultados
                     </button>
                 </div>
             </div>
@@ -80,7 +84,133 @@
                 </div>
             </div>
 
-            <!-- QR Scanner Section -->
+                        </div>
+        </div>
+
+        <!-- Resultados da Contagem Section -->
+        <div id="resultsSection" class="card results-section" style="display: none;">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-bar"></i> Resultados da Contagem</h2>
+                <div class="section-actions">
+                    <div class="filter-group">
+                        <input type="date" id="statsStartDate" placeholder="Data inicial">
+                        <input type="date" id="statsEndDate" placeholder="Data final">
+                        <input type="text" id="statsLocation" placeholder="Filtrar por localização">
+                        <button id="applyStatsFilter" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                    <button id="refreshStatsBtn" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards de Estatísticas Gerais -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalItemsCount">-</h3>
+                        <p>Total de Itens</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalCountsCount">-</h3>
+                        <p>Contagens Realizadas</p>
+                    </div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-icon">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="grandTotalCount">-</h3>
+                        <p>Total Geral</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="avgPerItemCount">-</h3>
+                        <p>Média por Item</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estatísticas por Categoria -->
+            <div class="category-stats">
+                <h3><i class="fas fa-chart-pie"></i> Por Categoria</h3>
+                <div class="category-grid">
+                    <div class="category-card unrestrict">
+                        <div class="category-header">
+                            <h4>Unrestrict</h4>
+                            <i class="fas fa-unlock"></i>
+                        </div>
+                        <div class="category-value">
+                            <span id="unrestrictTotal">-</span>
+                            <small id="unrestrictItems">- itens</small>
+                        </div>
+                    </div>
+                    <div class="category-card foc">
+                        <div class="category-header">
+                            <h4>FOC</h4>
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div class="category-value">
+                            <span id="focTotal">-</span>
+                            <small id="focItems">- itens</small>
+                        </div>
+                    </div>
+                    <div class="category-card rfb">
+                        <div class="category-header">
+                            <h4>RFB</h4>
+                            <i class="fas fa-redo"></i>
+                        </div>
+                        <div class="category-value">
+                            <span id="rfbTotal">-</span>
+                            <small id="rfbItems">- itens</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Localizações -->
+            <div class="location-stats">
+                <h3><i class="fas fa-map-marker-alt"></i> Top Localizações</h3>
+                <div id="locationsList" class="locations-list">
+                    <div class="loading">Carregando estatísticas...</div>
+                </div>
+            </div>
+
+            <!-- Período da Contagem -->
+            <div class="period-info">
+                <div class="period-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div>
+                        <strong>Período:</strong>
+                        <span id="countPeriod">-</span>
+                    </div>
+                </div>
+                <div class="period-card">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Última atualização:</strong>
+                        <span id="lastUpdate">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Scanner Section -->
             <div id="scannerSection" class="card scanner-section" style="display: none;">
                 <div class="scanner-header">
                     <h2><i class="fas fa-qrcode"></i> Scanner QR Code</h2>

@@ -399,6 +399,33 @@ class InventoryApp {
         this.toast = document.getElementById('toast');
         this.toastMessage = document.getElementById('toastMessage');
         
+        // Results section elements
+        this.resultsSection = document.getElementById('resultsSection');
+        this.resultsBtn = document.getElementById('resultsBtn');
+        this.refreshStatsBtn = document.getElementById('refreshStatsBtn');
+        this.applyStatsFilter = document.getElementById('applyStatsFilter');
+        this.statsStartDate = document.getElementById('statsStartDate');
+        this.statsEndDate = document.getElementById('statsEndDate');
+        this.statsLocation = document.getElementById('statsLocation');
+        
+        // Stats display elements
+        this.totalItemsCount = document.getElementById('totalItemsCount');
+        this.totalCountsCount = document.getElementById('totalCountsCount');
+        this.grandTotalCount = document.getElementById('grandTotalCount');
+        this.avgPerItemCount = document.getElementById('avgPerItemCount');
+        this.unrestrictTotal = document.getElementById('unrestrictTotal');
+        this.unrestrictItems = document.getElementById('unrestrictItems');
+        this.focTotal = document.getElementById('focTotal');
+        this.focItems = document.getElementById('focItems');
+        this.rfbTotal = document.getElementById('rfbTotal');
+        this.rfbItems = document.getElementById('rfbItems');
+        this.locationsList = document.getElementById('locationsList');
+        this.countPeriod = document.getElementById('countPeriod');
+        this.lastUpdate = document.getElementById('lastUpdate');
+        
+        // Current page
+        this.currentPage = 'dashboard';
+        
         // Pagination state
         this.currentPage = 1;
         this.itemsPerPage = 20;
@@ -450,6 +477,11 @@ class InventoryApp {
         this.closeExportModal.addEventListener('click', () => this.hideExportModal());
         this.exportExcelBtn.addEventListener('click', () => this.exportData('excel'));
         this.exportJsonBtn.addEventListener('click', () => this.exportData('json'));
+        
+        // Results section events
+        this.resultsBtn.addEventListener('click', () => this.showResultsSection());
+        this.refreshStatsBtn.addEventListener('click', () => this.loadStats());
+        this.applyStatsFilter.addEventListener('click', () => this.loadStats());
         
         // Close modal on outside click
         this.exportModal.addEventListener('click', (e) => {
@@ -1227,6 +1259,187 @@ class InventoryApp {
             page: 1,
             totalPages: 1
         };
+    }
+
+    // ===== SEÇÃO DE RESULTADOS DA CONTAGEM =====
+    
+    showResultsSection() {
+        // Esconder outras seções
+        this.hideAllSections();
+        
+        // Mostrar seção de resultados
+        this.resultsSection.style.display = 'block';
+        this.currentPage = 'results';
+        
+        // Carregar estatísticas
+        this.loadStats();
+        
+        // Definir datas padrão (últimos 30 dias)
+        if (!this.statsStartDate.value && !this.statsEndDate.value) {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            this.statsStartDate.value = startDate.toISOString().split('T')[0];
+            this.statsEndDate.value = endDate.toISOString().split('T')[0];
+        }
+    }
+    
+    hideAllSections() {
+        this.itemForm.style.display = 'none';
+        this.scannerSection.style.display = 'none';
+        this.historySection.style.display = 'none';
+        this.resultsSection.style.display = 'none';
+        this.exportModal.style.display = 'none';
+    }
+    
+    async loadStats() {
+        try {
+            // Mostrar loading
+            this.showStatsLoading();
+            
+            // Construir parâmetros de filtro
+            const params = new URLSearchParams();
+            if (this.statsStartDate.value) params.append('startDate', this.statsStartDate.value);
+            if (this.statsEndDate.value) params.append('endDate', this.statsEndDate.value);
+            if (this.statsLocation.value) params.append('location', this.statsLocation.value);
+            
+            // Buscar estatísticas da API
+            const response = await fetch(`/api/inventory/stats?${params}`);
+            if (!response.ok) throw new Error('Erro ao carregar estatísticas');
+            
+            const stats = await response.json();
+            
+            // Atualizar interface com os dados
+            this.updateStatsDisplay(stats);
+            
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+            this.showToast('Erro ao carregar estatísticas', 'error');
+            this.showStatsError();
+        }
+    }
+    
+    showStatsLoading() {
+        // Estatísticas gerais
+        this.totalItemsCount.textContent = '...';
+        this.totalCountsCount.textContent = '...';
+        this.grandTotalCount.textContent = '...';
+        this.avgPerItemCount.textContent = '...';
+        
+        // Categorias
+        this.unrestrictTotal.textContent = '...';
+        this.unrestrictItems.textContent = '... itens';
+        this.focTotal.textContent = '...';
+        this.focItems.textContent = '... itens';
+        this.rfbTotal.textContent = '...';
+        this.rfbItems.textContent = '... itens';
+        
+        // Localizações
+        this.locationsList.innerHTML = '<div class="loading">Carregando estatísticas...</div>';
+        
+        // Período
+        this.countPeriod.textContent = 'Carregando...';
+        this.lastUpdate.textContent = 'Carregando...';
+    }
+    
+    showStatsError() {
+        this.totalItemsCount.textContent = '-';
+        this.totalCountsCount.textContent = '-';
+        this.grandTotalCount.textContent = '-';
+        this.avgPerItemCount.textContent = '-';
+        this.unrestrictTotal.textContent = '-';
+        this.unrestrictItems.textContent = '- itens';
+        this.focTotal.textContent = '-';
+        this.focItems.textContent = '- itens';
+        this.rfbTotal.textContent = '-';
+        this.rfbItems.textContent = '- itens';
+        this.locationsList.innerHTML = '<div class="loading" style="color: #dc3545;">Erro ao carregar dados</div>';
+        this.countPeriod.textContent = '-';
+        this.lastUpdate.textContent = '-';
+    }
+    
+    updateStatsDisplay(stats) {
+        const { general, categories, locations } = stats;
+        
+        // Estatísticas gerais
+        if (general) {
+            this.totalItemsCount.textContent = general.total_items || 0;
+            this.totalCountsCount.textContent = general.total_counts || 0;
+            this.grandTotalCount.textContent = (general.grand_total || 0).toLocaleString('pt-BR');
+            this.avgPerItemCount.textContent = general.avg_per_item ? Math.round(general.avg_per_item) : 0;
+            
+            // Período
+            if (general.first_count && general.last_count) {
+                const firstDate = new Date(general.first_count).toLocaleDateString('pt-BR');
+                const lastDate = new Date(general.last_count).toLocaleDateString('pt-BR');
+                this.countPeriod.textContent = `${firstDate} até ${lastDate}`;
+            } else {
+                this.countPeriod.textContent = 'Nenhum dado disponível';
+            }
+        }
+        
+        // Estatísticas por categoria
+        if (categories && Array.isArray(categories)) {
+            categories.forEach(cat => {
+                const total = cat.total || 0;
+                const items = cat.items_with_stock || 0;
+                
+                switch (cat.category) {
+                    case 'Unrestrict':
+                        this.unrestrictTotal.textContent = total.toLocaleString('pt-BR');
+                        this.unrestrictItems.textContent = `${items} itens`;
+                        break;
+                    case 'FOC':
+                        this.focTotal.textContent = total.toLocaleString('pt-BR');
+                        this.focItems.textContent = `${items} itens`;
+                        break;
+                    case 'RFB':
+                        this.rfbTotal.textContent = total.toLocaleString('pt-BR');
+                        this.rfbItems.textContent = `${items} itens`;
+                        break;
+                }
+            });
+        }
+        
+        // Top localizações
+        if (locations && Array.isArray(locations)) {
+            if (locations.length === 0) {
+                this.locationsList.innerHTML = '<div class="loading">Nenhuma localização encontrada</div>';
+            } else {
+                this.locationsList.innerHTML = locations.map(loc => `
+                    <div class="location-item">
+                        <div class="location-info">
+                            <h4>${loc.location || 'Sem localização'}</h4>
+                            <p>${loc.total_items} itens</p>
+                        </div>
+                        <div class="location-stats-summary">
+                            <div class="location-stat">
+                                <span>${loc.total_unrestrict || 0}</span>
+                                <small>Unrestrict</small>
+                            </div>
+                            <div class="location-stat">
+                                <span>${loc.total_foc || 0}</span>
+                                <small>FOC</small>
+                            </div>
+                            <div class="location-stat">
+                                <span>${loc.total_rfb || 0}</span>
+                                <small>RFB</small>
+                            </div>
+                            <div class="location-stat">
+                                <span style="font-weight: bold;">${(loc.location_total || 0).toLocaleString('pt-BR')}</span>
+                                <small>Total</small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Última atualização
+        this.lastUpdate.textContent = new Date().toLocaleString('pt-BR');
+        
+        this.showToast('Estatísticas atualizadas! 📊', 'success');
     }
 }
 
