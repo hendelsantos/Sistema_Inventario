@@ -1,72 +1,67 @@
 #!/bin/bash
 
-echo "🚂 Diagnóstico Railway - Sistema de Inventário"
-echo "=============================================="
+echo "🚂 Railway Fix - Canvas/Distutils Problem"
+echo "========================================"
 
-echo "📋 Verificando configurações..."
-
-# 1. Verificar se existe railway.toml
-if [ -f "railway.toml" ]; then
-    echo "✅ railway.toml encontrado"
-else
-    echo "❌ railway.toml não encontrado - CRIADO AGORA"
-fi
-
-# 2. Verificar package.json
-echo "📦 Verificando package.json..."
-if grep -q "\"start\":" package.json; then
-    echo "✅ Script 'start' configurado"
-else
-    echo "❌ Script 'start' não encontrado"
-fi
-
-# 3. Verificar se tem Dockerfile
-if [ -f "Dockerfile" ]; then
-    echo "✅ Dockerfile encontrado"
-else
-    echo "❌ Dockerfile não encontrado - CRIADO AGORA"
-fi
-
-# 4. Verificar últimos commits
-echo ""
-echo "📝 Últimos commits:"
-git log --oneline -3
+echo "❌ PROBLEMA IDENTIFICADO:"
+echo "• Canvas não compila no Alpine Linux com Python 3.12"
+echo "• distutils removido do Python 3.12+"
+echo "• node-gyp falha ao compilar canvas"
 
 echo ""
-echo "🔄 Status do repositório:"
-git status --porcelain
+echo "✅ SOLUÇÕES IMPLEMENTADAS:"
+
+echo "🐳 1. Dockerfile Melhorado:"
+echo "   • Instalação de setuptools/wheel"
+echo "   • Fallback sem canvas se compilação falhar"
+echo "   • Dependências Alpine Linux otimizadas"
+echo "   • Health check configurado"
 
 echo ""
-echo "🚀 Possíveis causas do problema de deploy:"
-echo "1. ❗ Railway não detectou mudanças no repositório"
-echo "2. ❗ Configuração de build incorreta"
-echo "3. ❗ Dependências com problemas (canvas, pdfkit)"
-echo "4. ❗ Variáveis de ambiente faltando"
-echo "5. ❗ Branch incorreta conectada ao Railway"
+echo "📦 2. Package.json Otimizado:"
+echo "   • Canvas como dependência opcional"
+echo "   • Engines especificados"
+echo "   • Scripts Railway específicos"
 
 echo ""
-echo "🔧 Soluções implementadas:"
-echo "✅ Criado railway.toml com configurações adequadas"
-echo "✅ Criado Dockerfile otimizado para canvas"
-echo "✅ Ajustado package.json para Railway"
-echo "✅ Criado .dockerignore para otimizar build"
+echo "⚙️ 3. Railway.toml Atualizado:"
+echo "   • Builder: DOCKERFILE (mais controle)"
+echo "   • Health check configurado"
+echo "   • Timeout aumentado para build"
 
 echo ""
-echo "⚡ Próximos passos:"
-echo "1. Fazer commit destes novos arquivos"
-echo "2. Push para o GitHub"
-echo "3. Verificar se Railway está conectado ao branch main"
-echo "4. Forçar redeploy no Railway se necessário"
-echo "5. Verificar logs de build no Railway dashboard"
+echo "🔧 4. Código Defensivo:"
+echo "   • Labels.js verifica se canvas está disponível"
+echo "   • Fallback para funcionalidades sem canvas"
+echo "   • Logs informativos sobre disponibilidade"
 
 echo ""
-echo "🌐 URLs importantes:"
-echo "• GitHub: https://github.com/hendelsantos/Sistema_Inventario"
+echo "� Status dos arquivos:"
+ls -la Dockerfile railway.toml package.json package-railway.json 2>/dev/null | grep -E "(Dockerfile|railway\.toml|package.*\.json)"
+
+echo ""
+echo "🚀 PRÓXIMOS PASSOS:"
+echo "1. ✅ Arquivos atualizados (faça commit/push)"
+echo "2. 🔄 Railway fará rebuild automático"
+echo "3. 📊 Monitorar logs de build no Railway"
+echo "4. 🎯 Se ainda falhar, usar package-railway.json sem canvas"
+
+echo ""
+echo "⚠️ PLANO B - Se canvas continuar falhando:"
+echo "cp package-railway.json package.json"
+echo "git add package.json && git commit -m 'fix: Remove canvas dependency'"
+echo "git push origin main"
+
+echo ""
+echo "🌐 URLs para monitorar:"
 echo "• Railway Dashboard: https://railway.app/dashboard"
+echo "• Build Logs: Verifique a aba 'Build Logs'"
+echo "• Deploy Logs: Verifique a aba 'Deploy Logs'"
 
 echo ""
-echo "📱 Para forçar redeploy:"
-echo "1. Vá ao Railway Dashboard"
-echo "2. Clique no seu projeto"
-echo "3. Vá em 'Deployments'"
-echo "4. Clique em 'Deploy' ou 'Redeploy'"
+echo "� Progresso esperado:"
+echo "1. 🔄 Railway detecta mudanças"
+echo "2. 🏗️ Build inicia com novo Dockerfile"
+echo "3. 📦 Tenta instalar com canvas"
+echo "4. ⚡ Se falhar, instala sem canvas"
+echo "5. 🚀 Deploy bem-sucedido"

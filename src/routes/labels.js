@@ -4,6 +4,16 @@ const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
 const router = express.Router();
 
+// Verificar se canvas está disponível
+let canvasAvailable = false;
+try {
+    require('canvas');
+    canvasAvailable = true;
+    console.log('✅ Canvas disponível para geração de labels');
+} catch (error) {
+    console.log('⚠️ Canvas não disponível - Labels gerarão sem preview complexo');
+}
+
 // Listar templates de etiquetas
 router.get('/templates', (req, res) => {
     const sql = `
