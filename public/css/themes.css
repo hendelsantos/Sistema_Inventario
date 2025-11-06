@@ -1,0 +1,336 @@
+/* ===========================
+   SISTEMA DE TEMAS
+   =========================== */
+
+/* Variáveis CSS para Tema Azul Escuro (Padrão) */
+:root {
+    --primary-color: #2a5298;
+    --secondary-color: #1a237e;
+    --tertiary-color: #1e3c72;
+    --background-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1a237e 100%);
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-light: #999;
+    --background-card: rgba(255, 255, 255, 0.95);
+    --background-header: rgba(255, 255, 255, 0.95);
+    --border-color: rgba(255, 255, 255, 0.2);
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.15);
+    --shadow-heavy: rgba(0, 0, 0, 0.25);
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
+}
+
+/* Tema Minimalista Preto e Branco */
+[data-theme="minimal"] {
+    --primary-color: #000000;
+    --secondary-color: #333333;
+    --tertiary-color: #666666;
+    --background-gradient: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-light: #666666;
+    --background-card: #ffffff;
+    --background-header: #ffffff;
+    --border-color: #e9ecef;
+    --shadow-light: rgba(0, 0, 0, 0.08);
+    --shadow-medium: rgba(0, 0, 0, 0.12);
+    --shadow-heavy: rgba(0, 0, 0, 0.16);
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --error-color: #dc3545;
+    --info-color: #17a2b8;
+}
+
+/* Tema Escuro Minimalista */
+[data-theme="dark"] {
+    --primary-color: #ffffff;
+    --secondary-color: #e9ecef;
+    --tertiary-color: #adb5bd;
+    --background-gradient: linear-gradient(135deg, #212529 0%, #343a40 50%, #495057 100%);
+    --text-primary: #ffffff;
+    --text-secondary: #e9ecef;
+    --text-light: #adb5bd;
+    --background-card: #343a40;
+    --background-header: #343a40;
+    --border-color: #495057;
+    --shadow-light: rgba(255, 255, 255, 0.08);
+    --shadow-medium: rgba(255, 255, 255, 0.12);
+    --shadow-heavy: rgba(255, 255, 255, 0.16);
+    --success-color: #20c997;
+    --warning-color: #fd7e14;
+    --error-color: #e74c3c;
+    --info-color: #17a2b8;
+}
+
+/* Estilos do Seletor de Tema */
+.theme-selector {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--background-card);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 4px 20px var(--shadow-medium);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.theme-selector-toggle {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+}
+
+.theme-selector-toggle:hover {
+    background: var(--border-color);
+    transform: rotate(180deg);
+}
+
+.theme-options {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--background-card);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 32px var(--shadow-heavy);
+    border: 1px solid var(--border-color);
+    min-width: 200px;
+}
+
+.theme-options.show {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+}
+
+.theme-option:hover {
+    background: var(--border-color);
+}
+
+.theme-option.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.theme-preview {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 12px;
+    border: 2px solid var(--border-color);
+}
+
+.theme-preview.blue {
+    background: linear-gradient(45deg, #2a5298, #1a237e);
+}
+
+.theme-preview.minimal {
+    background: linear-gradient(45deg, #ffffff, #000000);
+}
+
+.theme-preview.dark {
+    background: linear-gradient(45deg, #212529, #ffffff);
+}
+
+.theme-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.theme-description {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 2px;
+}
+
+/* Transições suaves para mudança de tema */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Aplicação das variáveis CSS nos elementos existentes */
+body {
+    background: var(--background-gradient);
+    color: var(--text-primary);
+}
+
+.header {
+    background: var(--background-header);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header h1 {
+    color: var(--text-primary);
+}
+
+.header h1 i {
+    color: var(--primary-color);
+}
+
+.card {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px var(--shadow-light);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.form-control {
+    background: var(--background-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.25);
+}
+
+.stat-card {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+}
+
+.stat-icon {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.recent-item {
+    background: var(--background-card);
+    border-left: 4px solid var(--primary-color);
+}
+
+.recent-item h4 {
+    color: var(--primary-color);
+}
+
+.recent-item p {
+    color: var(--text-secondary);
+}
+
+.recent-item small {
+    color: var(--text-light);
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--info-color);
+    color: var(--info-color);
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+/* Tema Minimalista - Ajustes específicos */
+[data-theme="minimal"] .card {
+    border: 2px solid var(--border-color);
+    box-shadow: none;
+}
+
+[data-theme="minimal"] .btn-primary {
+    border: 2px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+}
+
+[data-theme="minimal"] .btn-primary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="minimal"] .stat-icon {
+    background: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+[data-theme="minimal"] .header {
+    border-bottom: 3px solid var(--border-color);
+}
+
+/* Tema Escuro - Ajustes específicos */
+[data-theme="dark"] .form-control {
+    background: var(--background-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-light);
+}
+
+[data-theme="dark"] .card {
+    border: 1px solid var(--border-color);
+}
+
+/* Responsividade do seletor de tema */
+@media (max-width: 768px) {
+    .theme-selector {
+        top: 10px;
+        right: 10px;
+        padding: 8px;
+    }
+    
+    .theme-options {
+        min-width: 180px;
+    }
+    
+    .theme-option {
+        padding: 10px;
+    }
+}

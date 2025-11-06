@@ -7,9 +7,9 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1a237e 100%);
+    background: var(--background-gradient, linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1a237e 100%));
     min-height: 100vh;
-    color: #333;
+    color: var(--text-primary, #333);
 }
 
 .container {
