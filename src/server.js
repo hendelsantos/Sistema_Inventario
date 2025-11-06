@@ -13,6 +13,7 @@ try {
 
 const inventoryRoutes = require('./routes/inventory');
 const exportRoutes = require('./routes/export');
+const whatsappRoutes = require('./routes/whatsapp');
 const cyclicCountsRoutes = require('./routes/cyclic-counts');
 const variancesRoutes = require('./routes/variances');
 const movementsRoutes = require('./routes/movements');
@@ -49,6 +50,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Rotas API
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/cyclic-counts', cyclicCountsRoutes);
 app.use('/api/variances', variancesRoutes);
 app.use('/api/movements', movementsRoutes);
