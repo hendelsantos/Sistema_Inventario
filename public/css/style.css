@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1a237e 100%);
     min-height: 100vh;
     color: #333;
 }
@@ -42,7 +42,7 @@ body {
 }
 
 .header h1 i {
-    color: #667eea;
+    color: #2a5298;
     margin-right: 0.5rem;
 }
 
@@ -91,7 +91,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #2a5298, #1a237e);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,7 +136,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #2a5298, #1a237e);
     color: white;
 }
 
@@ -164,7 +164,7 @@ body {
 /* Scanner Section */
 .scanner-section {
     text-align: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2a5298 0%, #1a237e 100%);
     color: white;
     border: none;
 }
@@ -205,7 +205,7 @@ body {
 .qr-reader select {
     background: white !important;
     color: #333 !important;
-    border: 2px solid #667eea !important;
+    border: 2px solid #2a5298 !important;
     border-radius: 6px !important;
     padding: 0.5rem !important;
     margin: 0.5rem !important;
@@ -288,7 +288,7 @@ body {
 
 .form-group label i {
     margin-right: 0.5rem;
-    color: #667eea;
+    color: #2a5298;
 }
 
 .form-group input,
@@ -304,7 +304,7 @@ body {
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #2a5298;
 }
 
 /* Stock Section */
@@ -348,7 +348,7 @@ body {
 }
 
 .stock-item.total {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #2a5298, #1a237e);
     color: white;
     padding: 1rem;
     border-radius: 8px;
@@ -383,12 +383,12 @@ body {
     background: #f8f9fa;
     padding: 1rem;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #2a5298;
 }
 
 .history-date {
     font-weight: 600;
-    color: #667eea;
+    color: #2a5298;
     margin-bottom: 0.5rem;
 }
 
@@ -435,7 +435,7 @@ body {
 }
 
 .filter-group label i {
-    color: #667eea;
+    color: #2a5298;
     width: 16px;
 }
 
@@ -451,7 +451,7 @@ body {
 .filter-group input:focus,
 .filter-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #2a5298;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -496,7 +496,7 @@ body {
 }
 
 .suggestion-item.selected {
-    background: #667eea;
+    background: #2a5298;
     color: white;
 }
 
@@ -519,7 +519,7 @@ body {
     align-items: center;
     margin-bottom: 1rem;
     padding: 1rem;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #2a5298, #1a237e);
     color: white;
     border-radius: 8px;
 }
@@ -553,7 +553,7 @@ body {
 }
 
 .pagination-btn:hover:not(:disabled) {
-    border-color: #667eea;
+    border-color: #2a5298;
     background: #f8f9fa;
 }
 
@@ -563,9 +563,9 @@ body {
 }
 
 .pagination-btn.active {
-    background: #667eea;
+    background: #2a5298;
     color: white;
-    border-color: #667eea;
+    border-color: #2a5298;
 }
 
 .pagination-info {
@@ -616,7 +616,7 @@ body {
 .stock-badge.unrestrict { background: #d4edda; color: #155724; }
 .stock-badge.foc { background: #d1ecf1; color: #0c5460; }
 .stock-badge.rfb { background: #f8d7da; color: #721c24; }
-.stock-badge.total { background: #667eea; color: white; }
+.stock-badge.total { background: #2a5298; color: white; }
 
 .action-btn {
     padding: 0.25rem 0.5rem;
@@ -628,7 +628,7 @@ body {
 }
 
 .action-btn.view {
-    background: #667eea;
+    background: #2a5298;
     color: white;
 }
 
@@ -1027,7 +1027,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2a5298 0%, #1a237e 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
