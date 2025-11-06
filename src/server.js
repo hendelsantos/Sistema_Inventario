@@ -4,6 +4,8 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { initDatabase } = require('./database/database');
 
+// Sistema convertido para Web Mobile - 2024-11-05
+
 // Carregar variáveis de ambiente se o arquivo .env existir
 try {
     require('dotenv').config();
@@ -63,13 +65,17 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Health check para Railway
+// Health check para Railway - Sistema Web Mobile
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
+        system: 'Sistema Inventário Web Mobile',
+        version: '2.0.0',
         timestamp: new Date().toISOString(),
         env: NODE_ENV,
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        pwa_removed: true,
+        mobile_optimized: true
     });
 });
 

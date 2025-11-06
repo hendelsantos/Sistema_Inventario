@@ -1,10 +1,12 @@
 [build]
   builder = "DOCKERFILE"
   dockerfilePath = "Dockerfile"
+  watchPatterns = ["src/**", "public/**", "package.json", "Dockerfile"]
 
 [deploy]
   startCommand = "npm start"
   restartPolicyType = "ON_FAILURE"
+  restartPolicyMaxRetries = 3
   healthcheckPath = "/health"
   healthcheckTimeout = 300
 

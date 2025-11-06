@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Sistema Web Mobile Otimizado - v2.0.0
+# PWA removido, foco em performance e estabilidade
+
 # Instalar dependências básicas do sistema
 RUN apk add --no-cache \
     python3 \

@@ -1,7 +1,7 @@
 {
   "name": "sistema-inventario",
-  "version": "1.0.0",
-  "description": "Sistema web de inventário com leitura de QR codes e controle de estoque",
+  "version": "2.0.0",
+  "description": "Sistema web mobile de inventário com leitura de QR codes e controle de estoque",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
