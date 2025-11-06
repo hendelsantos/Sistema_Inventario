@@ -89,6 +89,104 @@ router.post('/item', (req, res) => {
     );
 });
 
+// Compatibilidade com frontend: POST na raiz do recurso
+router.post('/', (req, res) => {
+    // Aceitar tanto qrCode quanto qr_code (variações de frontend)
+    const qrCode = req.body.qrCode || req.body.qr_code;
+    const { description, location, notes, unrestrict = 0, foc = 0, rfb = 0 } = req.body;
+
+    if (!validateQRCode(qrCode)) {
+        return res.status(400).json({ error: 'QR code deve ter exatamente 17 caracteres' });
+    }
+
+    // Reusar lógica existente: verificar se existe e adicionar contagem
+    db.get(
+        'SELECT id FROM items WHERE qr_code = ?',
+        [qrCode],
+        (err, existingItem) => {
+            if (err) {
+                console.error('Erro ao verificar item (compatibilidade):', err);
+                return res.status(500).json({ error: 'Erro interno do servidor' });
+            }
+
+            if (existingItem) {
+                addStockCount(existingItem.id, qrCode, unrestrict, foc, rfb, notes, res);
+            } else {
+                db.run(
+                    'INSERT INTO items (qr_code, description, location, notes) VALUES (?, ?, ?, ?)',
+                    [qrCode, description || '', location || '', notes || ''],
+                    function(err) {
+                        if (err) {
+                            console.error('Erro ao criar item (compatibilidade):', err);
+                            return res.status(500).json({ error: 'Erro ao criar item' });
+                        }
+
+                        addStockCount(this.lastID, qrCode, unrestrict, foc, rfb, notes, res);
+                    }
+                );
+            }
+        }
+    );
+});
+
+// PUT - Atualizar dados do item (compatibilidade com sync/update)
+router.put('/:qrCode', (req, res) => {
+    const qrCode = req.params.qrCode;
+    const { description, location, notes } = req.body;
+
+    if (!validateQRCode(qrCode)) {
+        return res.status(400).json({ error: 'QR code deve ter exatamente 17 caracteres' });
+    }
+
+    db.run(
+        'UPDATE items SET description = ?, location = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE qr_code = ?',
+        [description || '', location || '', notes || '', qrCode],
+        function(err) {
+            if (err) {
+                console.error('Erro ao atualizar item:', err);
+                return res.status(500).json({ error: 'Erro interno do servidor' });
+            }
+
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Item não encontrado' });
+            }
+
+            res.json({ success: true, message: 'Item atualizado com sucesso' });
+        }
+    );
+});
+
+// DELETE - Remover item e suas contagens (compatibilidade com sync/delete)
+router.delete('/:qrCode', (req, res) => {
+    const qrCode = req.params.qrCode;
+
+    if (!validateQRCode(qrCode)) {
+        return res.status(400).json({ error: 'QR code deve ter exatamente 17 caracteres' });
+    }
+
+    // Primeiro remover contagens associadas
+    db.run('DELETE FROM stock_counts WHERE qr_code = ?', [qrCode], function(err) {
+        if (err) {
+            console.error('Erro ao deletar contagens do item:', err);
+            return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+
+        // Em seguida remover o item
+        db.run('DELETE FROM items WHERE qr_code = ?', [qrCode], function(err) {
+            if (err) {
+                console.error('Erro ao deletar item:', err);
+                return res.status(500).json({ error: 'Erro interno do servidor' });
+            }
+
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Item não encontrado' });
+            }
+
+            res.json({ success: true, message: 'Item e contagens removidos com sucesso' });
+        });
+    });
+});
+
 function addStockCount(itemId, qrCode, unrestrict, foc, rfb, notes, res) {
     db.run(
         'INSERT INTO stock_counts (item_id, qr_code, unrestrict, foc, rfb, notes) VALUES (?, ?, ?, ?, ?, ?)',
