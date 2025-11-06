@@ -864,7 +864,14 @@ body {
 /* PWA Specific Styles */
 
 /* PWA Mode Adjustments */
+.pwa-mode {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
 
+.pwa-mode .header {
+    padding-top: env(safe-area-inset-top);
+}
 
 /* Connection Status Indicator */
 .connection-status {
@@ -899,6 +906,19 @@ body {
 }
 
 /* Install Banner */
+.install-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 10000;
+    animation: slideUp 0.3s ease;
+}
 
 .install-content {
     display: flex;
@@ -965,6 +985,19 @@ body {
 }
 
 /* Update Banner */
+.update-banner {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    animation: slideDown 0.3s ease;
+}
 
 @keyframes slideDown {
     from { transform: translateY(-100%); opacity: 0; }
@@ -1045,9 +1078,42 @@ body {
 
 /* Responsive adjustments for PWA */
 @media (max-width: 480px) {
+    .install-banner { 
+        left: 10px; 
+        right: 10px; 
+        bottom: 10px;
+    }
+    
+    .update-banner {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+    }
+    
+    .connection-status {
+        top: 5px;
+        right: 5px;
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+    
+    .pwa-mode {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
 
 /* Landscape orientation adjustments */
 @media (orientation: landscape) and (max-height: 500px) {
+    .install-banner {
+        bottom: 10px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: 400px;
+    }
+}
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
@@ -1064,3 +1130,18 @@ body {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+    .install-banner,
+    .update-banner,
+    .connection-status {
+        animation: none;
+    }
+    
+    .pwa-loader {
+        animation: none;
+        border-top: 4px solid white;
+    }
+    
+    @keyframes pulse-offline {
+        /* No animation for reduced motion */
+    }
+}

@@ -9,9 +9,7 @@
     "init-db": "node src/database/init.js",
     "build": "npm run init-db",
     "test": "echo \"No tests specified\" && exit 0",
-    "railway-build": "npm run init-db",
-    "generate-icons": "node generate-icons.js",
-    "pwa-setup": "npm run generate-icons && echo 'PWA setup concluído!'"
+    "railway-build": "npm run init-db"
   },
   "keywords": [
     "inventory",

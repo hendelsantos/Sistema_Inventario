@@ -352,10 +352,208 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="js/app.js"></script>
     
-    <!-- Scripts básicos -->
+    <!-- PWA Installation & Service Worker -->
     <script>
-        console.log('🌐 Sistema de Inventário - Versão Web');
-        console.log('📱 Otimizado para mobile e desktop');
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('✅ Service Worker registrado:', registration.scope);
+                    
+                    // Verificar atualizações
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Nova versão disponível
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('❌ Falha ao registrar Service Worker:', error);
+                }
+            });
+        }
+
+        // Banner de instalação PWA
+        let deferredPrompt;
+        let installBanner = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevenir o prompt automático
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallBanner();
+        });
+
+        function showInstallBanner() {
+            if (installBanner) return; // Já está mostrado
+            
+            installBanner = document.createElement('div');
+            installBanner.className = 'install-banner';
+            installBanner.innerHTML = `
+                <div class="install-content">
+                    <div class="install-icon">📱</div>
+                    <div class="install-text">
+                        <h3>Instalar App</h3>
+                        <p>Adicione à tela inicial para acesso rápido</p>
+                    </div>
+                    <button class="install-btn" onclick="installPWA()">Instalar</button>
+                    <button class="close-btn" onclick="closeInstallBanner()">✕</button>
+                </div>
+            `;
+            
+            document.body.appendChild(installBanner);
+            
+            // Adicionar estilos
+            const style = document.createElement('style');
+            style.textContent = `
+                .install-banner {
+                    position: fixed;
+                    bottom: 20px;
+                    left: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #4285f4, #34a853);
+                    color: white;
+                    border-radius: 12px;
+                    padding: 16px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    animation: slideUp 0.3s ease;
+                }
+                
+                .install-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                
+                .install-icon {
+                    font-size: 24px;
+                }
+                
+                .install-text h3 {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                
+                .install-text p {
+                    margin: 2px 0 0 0;
+                    font-size: 14px;
+                    opacity: 0.9;
+                }
+                
+                .install-btn {
+                    background: rgba(255,255,255,0.2);
+                    border: 1px solid rgba(255,255,255,0.3);
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    margin-left: auto;
+                }
+                
+                .close-btn {
+                    background: none;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    padding: 4px;
+                    opacity: 0.7;
+                }
+                
+                @keyframes slideUp {
+                    from { transform: translateY(100%); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                
+                @media (max-width: 480px) {
+                    .install-banner { left: 10px; right: 10px; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        async function installPWA() {
+            if (!deferredPrompt) return;
+            
+            const result = await deferredPrompt.prompt();
+            console.log('Resultado da instalação:', result.outcome);
+            
+            deferredPrompt = null;
+            closeInstallBanner();
+        }
+
+        function closeInstallBanner() {
+            if (installBanner) {
+                installBanner.remove();
+                installBanner = null;
+            }
+        }
+
+        // Detectar se foi instalado como PWA
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA instalado com sucesso!');
+            closeInstallBanner();
+            showToast('App instalado com sucesso! 🎉', 'success');
+        });
+
+        // Notificação de atualização
+        function showUpdateNotification() {
+            const updateBanner = document.createElement('div');
+            updateBanner.className = 'update-banner';
+            updateBanner.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div>🔄</div>
+                    <div>
+                        <strong>Nova versão disponível!</strong>
+                        <p style="margin: 0; font-size: 14px;">Recarregue para atualizar</p>
+                    </div>
+                    <button onclick="updateApp()" style="background: #4285f4; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Atualizar</button>
+                </div>
+            `;
+            
+            updateBanner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+            `;
+            
+            document.body.appendChild(updateBanner);
+        }
+
+        async function updateApp() {
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration && registration.waiting) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                window.location.reload();
+            }
+        }
+
+        // Detectar modo PWA
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone ||
+                   document.referrer.includes('android-app://');
+        }
+
+        // Ajustar interface se for PWA
+        if (isPWA()) {
+            document.body.classList.add('pwa-mode');
+            console.log('🚀 Executando como PWA');
+        }
     </script>
     
     <!-- Sistema de Temas -->

@@ -7,7 +7,11 @@ npm-debug.log
 database/*.db-wal
 database/*.db-shm
 public/css/style.css.backup
+public/css/style.css.pwa-backup
+public/index.html.pwa-backup
 update-colors.sh
+clean-pwa.sh
+remove-pwa.sh
 check-*.js
 migrate-db.js
 test-*.sh

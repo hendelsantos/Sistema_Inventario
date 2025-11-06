@@ -7,9 +7,9 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--background-gradient, linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1a237e 100%));
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1a237e 100%);
     min-height: 100vh;
-    color: var(--text-primary, #333);
+    color: #333;
 }
 
 .container {
@@ -42,7 +42,7 @@ body {
 }
 
 .header h1 i {
-    color: #2a5298;
+    color: #667eea;
     margin-right: 0.5rem;
 }
 
@@ -91,7 +91,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #2a5298, #1a237e);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,7 +136,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #2a5298, #1a237e);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
 }
 
@@ -164,7 +164,7 @@ body {
 /* Scanner Section */
 .scanner-section {
     text-align: center;
-    background: linear-gradient(135deg, #2a5298 0%, #1a237e 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
 }
@@ -205,7 +205,7 @@ body {
 .qr-reader select {
     background: white !important;
     color: #333 !important;
-    border: 2px solid #2a5298 !important;
+    border: 2px solid #667eea !important;
     border-radius: 6px !important;
     padding: 0.5rem !important;
     margin: 0.5rem !important;
@@ -288,7 +288,7 @@ body {
 
 .form-group label i {
     margin-right: 0.5rem;
-    color: #2a5298;
+    color: #667eea;
 }
 
 .form-group input,
@@ -304,7 +304,7 @@ body {
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #2a5298;
+    border-color: #667eea;
 }
 
 /* Stock Section */
@@ -348,7 +348,7 @@ body {
 }
 
 .stock-item.total {
-    background: linear-gradient(135deg, #2a5298, #1a237e);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     padding: 1rem;
     border-radius: 8px;
@@ -383,12 +383,12 @@ body {
     background: #f8f9fa;
     padding: 1rem;
     border-radius: 8px;
-    border-left: 4px solid #2a5298;
+    border-left: 4px solid #667eea;
 }
 
 .history-date {
     font-weight: 600;
-    color: #2a5298;
+    color: #667eea;
     margin-bottom: 0.5rem;
 }
 
@@ -435,7 +435,7 @@ body {
 }
 
 .filter-group label i {
-    color: #2a5298;
+    color: #667eea;
     width: 16px;
 }
 
@@ -451,7 +451,7 @@ body {
 .filter-group input:focus,
 .filter-group select:focus {
     outline: none;
-    border-color: #2a5298;
+    border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -496,7 +496,7 @@ body {
 }
 
 .suggestion-item.selected {
-    background: #2a5298;
+    background: #667eea;
     color: white;
 }
 
@@ -519,7 +519,7 @@ body {
     align-items: center;
     margin-bottom: 1rem;
     padding: 1rem;
-    background: linear-gradient(135deg, #2a5298, #1a237e);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border-radius: 8px;
 }
@@ -553,7 +553,7 @@ body {
 }
 
 .pagination-btn:hover:not(:disabled) {
-    border-color: #2a5298;
+    border-color: #667eea;
     background: #f8f9fa;
 }
 
@@ -563,9 +563,9 @@ body {
 }
 
 .pagination-btn.active {
-    background: #2a5298;
+    background: #667eea;
     color: white;
-    border-color: #2a5298;
+    border-color: #667eea;
 }
 
 .pagination-info {
@@ -616,7 +616,7 @@ body {
 .stock-badge.unrestrict { background: #d4edda; color: #155724; }
 .stock-badge.foc { background: #d1ecf1; color: #0c5460; }
 .stock-badge.rfb { background: #f8d7da; color: #721c24; }
-.stock-badge.total { background: #2a5298; color: white; }
+.stock-badge.total { background: #667eea; color: white; }
 
 .action-btn {
     padding: 0.25rem 0.5rem;
@@ -628,7 +628,7 @@ body {
 }
 
 .action-btn.view {
-    background: #2a5298;
+    background: #667eea;
     color: white;
 }
 
@@ -864,7 +864,14 @@ body {
 /* PWA Specific Styles */
 
 /* PWA Mode Adjustments */
+.pwa-mode {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
 
+.pwa-mode .header {
+    padding-top: env(safe-area-inset-top);
+}
 
 /* Connection Status Indicator */
 .connection-status {
@@ -899,6 +906,19 @@ body {
 }
 
 /* Install Banner */
+.install-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 10000;
+    animation: slideUp 0.3s ease;
+}
 
 .install-content {
     display: flex;
@@ -965,6 +985,19 @@ body {
 }
 
 /* Update Banner */
+.update-banner {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    animation: slideDown 0.3s ease;
+}
 
 @keyframes slideDown {
     from { transform: translateY(-100%); opacity: 0; }
@@ -994,7 +1027,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #2a5298 0%, #1a237e 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -1045,9 +1078,42 @@ body {
 
 /* Responsive adjustments for PWA */
 @media (max-width: 480px) {
+    .install-banner { 
+        left: 10px; 
+        right: 10px; 
+        bottom: 10px;
+    }
+    
+    .update-banner {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+    }
+    
+    .connection-status {
+        top: 5px;
+        right: 5px;
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+    
+    .pwa-mode {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
 
 /* Landscape orientation adjustments */
 @media (orientation: landscape) and (max-height: 500px) {
+    .install-banner {
+        bottom: 10px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: 400px;
+    }
+}
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
@@ -1064,3 +1130,18 @@ body {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+    .install-banner,
+    .update-banner,
+    .connection-status {
+        animation: none;
+    }
+    
+    .pwa-loader {
+        animation: none;
+        border-top: 4px solid white;
+    }
+    
+    @keyframes pulse-offline {
+        /* No animation for reduced motion */
+    }
+}
