@@ -13,6 +13,12 @@ try {
 
 const inventoryRoutes = require('./routes/inventory');
 const exportRoutes = require('./routes/export');
+const cyclicCountsRoutes = require('./routes/cyclic-counts');
+const variancesRoutes = require('./routes/variances');
+const movementsRoutes = require('./routes/movements');
+const transfersRoutes = require('./routes/transfers');
+const blocksRoutes = require('./routes/blocks');
+const labelsRoutes = require('./routes/labels');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,6 +49,12 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Rotas API
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/cyclic-counts', cyclicCountsRoutes);
+app.use('/api/variances', variancesRoutes);
+app.use('/api/movements', movementsRoutes);
+app.use('/api/transfers', transfersRoutes);
+app.use('/api/blocks', blocksRoutes);
+app.use('/api/labels', labelsRoutes);
 
 // Rota principal
 app.get('/', (req, res) => {
