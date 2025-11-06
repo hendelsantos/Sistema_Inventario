@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Sistema de Inventário</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .offline-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .offline-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .offline-message {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .retry-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .retry-btn:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+        }
+
+        .cached-data {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4285f4;
+        }
+
+        .cached-data h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .cached-data p {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .online .status-indicator {
+            background: #51cf66;
+            animation: none;
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .offline-title {
+                font-size: 1.5rem;
+            }
+            
+            .offline-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📱</div>
+        <h1 class="offline-title">Sistema Offline</h1>
+        <p class="offline-message">
+            <span class="status-indicator"></span>
+            Você está offline no momento. Verifique sua conexão com a internet e tente novamente.
+        </p>
+        
+        <button class="retry-btn" onclick="window.location.reload()">
+            🔄 Tentar Novamente
+        </button>
+        
+        <button class="retry-btn" onclick="goHome()">
+            🏠 Voltar ao Início
+        </button>
+
+        <div class="cached-data">
+            <h3>📊 Dados Disponíveis Offline</h3>
+            <p>
+                Alguns dados podem estar disponíveis no cache local. 
+                Quando voltar online, todas as alterações serão sincronizadas automaticamente.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Detectar quando voltar online
+        window.addEventListener('online', function() {
+            document.body.classList.add('online');
+            document.querySelector('.offline-message').innerHTML = 
+                '<span class="status-indicator"></span>Conexão restaurada! Redirecionando...';
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        });
+
+        // Detectar quando ficar offline
+        window.addEventListener('offline', function() {
+            document.body.classList.remove('online');
+            document.querySelector('.offline-message').innerHTML = 
+                '<span class="status-indicator"></span>Você está offline no momento. Verifique sua conexão com a internet e tente novamente.';
+        });
+
+        // Função para voltar ao início
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // Verificar status da conexão ao carregar
+        if (navigator.onLine) {
+            document.body.classList.add('online');
+            document.querySelector('.offline-message').innerHTML = 
+                '<span class="status-indicator"></span>Conexão disponível. Redirecionando...';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+
+        // Registrar Service Worker se ainda não estiver
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('SW registered from offline page');
+                })
+                .catch(error => {
+                    console.log('SW registration failed from offline page');
+                });
+        }
+    </script>
+</body>
+</html>

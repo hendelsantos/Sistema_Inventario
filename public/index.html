@@ -4,6 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Inventário</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Sistema completo de inventário com leitura de QR codes e controle de estoque">
+    <meta name="keywords" content="inventário, estoque, QR code, scanner, mobile">
+    <meta name="author" content="Sistema de Inventário">
+    
+    <!-- Mobile Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Inventário">
+    <meta name="application-name" content="Inventário">
+    <meta name="msapplication-TileColor" content="#4285f4">
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#4285f4">
+    <meta name="msapplication-navbutton-color" content="#4285f4">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#4285f4">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="57x57" href="/icons/icon-72x72.png">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="css/style.css" as="style">
+    <link rel="preload" href="js/app.js" as="script">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -329,5 +370,209 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="js/app.js"></script>
+    
+    <!-- PWA Installation & Service Worker -->
+    <script>
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('✅ Service Worker registrado:', registration.scope);
+                    
+                    // Verificar atualizações
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Nova versão disponível
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('❌ Falha ao registrar Service Worker:', error);
+                }
+            });
+        }
+
+        // Banner de instalação PWA
+        let deferredPrompt;
+        let installBanner = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevenir o prompt automático
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallBanner();
+        });
+
+        function showInstallBanner() {
+            if (installBanner) return; // Já está mostrado
+            
+            installBanner = document.createElement('div');
+            installBanner.className = 'install-banner';
+            installBanner.innerHTML = `
+                <div class="install-content">
+                    <div class="install-icon">📱</div>
+                    <div class="install-text">
+                        <h3>Instalar App</h3>
+                        <p>Adicione à tela inicial para acesso rápido</p>
+                    </div>
+                    <button class="install-btn" onclick="installPWA()">Instalar</button>
+                    <button class="close-btn" onclick="closeInstallBanner()">✕</button>
+                </div>
+            `;
+            
+            document.body.appendChild(installBanner);
+            
+            // Adicionar estilos
+            const style = document.createElement('style');
+            style.textContent = `
+                .install-banner {
+                    position: fixed;
+                    bottom: 20px;
+                    left: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #4285f4, #34a853);
+                    color: white;
+                    border-radius: 12px;
+                    padding: 16px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    animation: slideUp 0.3s ease;
+                }
+                
+                .install-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                
+                .install-icon {
+                    font-size: 24px;
+                }
+                
+                .install-text h3 {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                
+                .install-text p {
+                    margin: 2px 0 0 0;
+                    font-size: 14px;
+                    opacity: 0.9;
+                }
+                
+                .install-btn {
+                    background: rgba(255,255,255,0.2);
+                    border: 1px solid rgba(255,255,255,0.3);
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    margin-left: auto;
+                }
+                
+                .close-btn {
+                    background: none;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    padding: 4px;
+                    opacity: 0.7;
+                }
+                
+                @keyframes slideUp {
+                    from { transform: translateY(100%); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                
+                @media (max-width: 480px) {
+                    .install-banner { left: 10px; right: 10px; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        async function installPWA() {
+            if (!deferredPrompt) return;
+            
+            const result = await deferredPrompt.prompt();
+            console.log('Resultado da instalação:', result.outcome);
+            
+            deferredPrompt = null;
+            closeInstallBanner();
+        }
+
+        function closeInstallBanner() {
+            if (installBanner) {
+                installBanner.remove();
+                installBanner = null;
+            }
+        }
+
+        // Detectar se foi instalado como PWA
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA instalado com sucesso!');
+            closeInstallBanner();
+            showToast('App instalado com sucesso! 🎉', 'success');
+        });
+
+        // Notificação de atualização
+        function showUpdateNotification() {
+            const updateBanner = document.createElement('div');
+            updateBanner.className = 'update-banner';
+            updateBanner.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div>🔄</div>
+                    <div>
+                        <strong>Nova versão disponível!</strong>
+                        <p style="margin: 0; font-size: 14px;">Recarregue para atualizar</p>
+                    </div>
+                    <button onclick="updateApp()" style="background: #4285f4; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Atualizar</button>
+                </div>
+            `;
+            
+            updateBanner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+            `;
+            
+            document.body.appendChild(updateBanner);
+        }
+
+        async function updateApp() {
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration && registration.waiting) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                window.location.reload();
+            }
+        }
+
+        // Detectar modo PWA
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone ||
+                   document.referrer.includes('android-app://');
+        }
+
+        // Ajustar interface se for PWA
+        if (isPWA()) {
+            document.body.classList.add('pwa-mode');
+            console.log('🚀 Executando como PWA');
+        }
+    </script>
 </body>
 </html>

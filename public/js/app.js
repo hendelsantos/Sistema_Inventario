@@ -1,13 +1,335 @@
+// Sistema de Cache Offline
+class OfflineManager {
+    constructor() {
+        this.dbName = 'inventario-offline';
+        this.version = 1;
+        this.db = null;
+        this.isOnline = navigator.onLine;
+        this.syncQueue = [];
+        
+        this.initDB();
+        this.setupEventListeners();
+    }
+
+    async initDB() {
+        try {
+            this.db = await this.openDB();
+            console.log('📦 Banco offline inicializado');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar banco offline:', error);
+        }
+    }
+
+    openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+            
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                
+                // Store para dados de inventário em cache
+                if (!db.objectStoreNames.contains('inventory')) {
+                    const inventoryStore = db.createObjectStore('inventory', { keyPath: 'qr_code' });
+                    inventoryStore.createIndex('description', 'description', { unique: false });
+                    inventoryStore.createIndex('location', 'location', { unique: false });
+                    inventoryStore.createIndex('created_at', 'created_at', { unique: false });
+                }
+                
+                // Store para dados pendentes de sincronização
+                if (!db.objectStoreNames.contains('pending_sync')) {
+                    const syncStore = db.createObjectStore('pending_sync', { keyPath: 'id', autoIncrement: true });
+                    syncStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    syncStore.createIndex('action', 'action', { unique: false });
+                }
+                
+                // Store para configurações e cache de API
+                if (!db.objectStoreNames.contains('cache')) {
+                    db.createObjectStore('cache', { keyPath: 'key' });
+                }
+            };
+        });
+    }
+
+    setupEventListeners() {
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            console.log('🌐 Conexão restaurada');
+            this.showConnectionStatus(true);
+            this.syncPendingData();
+        });
+
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            console.log('📴 Offline');
+            this.showConnectionStatus(false);
+        });
+    }
+
+    showConnectionStatus(isOnline) {
+        const statusEl = document.getElementById('connectionStatus') || this.createStatusElement();
+        statusEl.className = `connection-status ${isOnline ? 'online' : 'offline'}`;
+        statusEl.innerHTML = `
+            <i class="fas fa-${isOnline ? 'wifi' : 'wifi-slash'}"></i>
+            ${isOnline ? 'Online' : 'Offline'}
+        `;
+    }
+
+    createStatusElement() {
+        const statusEl = document.createElement('div');
+        statusEl.id = 'connectionStatus';
+        statusEl.className = 'connection-status';
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            .connection-status {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 500;
+                z-index: 1000;
+                transition: all 0.3s ease;
+            }
+            .connection-status.online {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .connection-status.offline {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+        `;
+        document.head.appendChild(style);
+        document.body.appendChild(statusEl);
+        
+        return statusEl;
+    }
+
+    // Cache de dados da API
+    async cacheData(key, data, expirationMinutes = 30) {
+        if (!this.db) return;
+        
+        const expiration = Date.now() + (expirationMinutes * 60 * 1000);
+        const cacheEntry = {
+            key,
+            data,
+            expiration,
+            cached_at: Date.now()
+        };
+        
+        try {
+            const tx = this.db.transaction(['cache'], 'readwrite');
+            await tx.objectStore('cache').put(cacheEntry);
+            console.log('💾 Dados cached:', key);
+        } catch (error) {
+            console.error('❌ Erro ao cachear dados:', error);
+        }
+    }
+
+    // Recuperar dados do cache
+    async getCachedData(key) {
+        if (!this.db) return null;
+        
+        try {
+            const tx = this.db.transaction(['cache'], 'readonly');
+            const cacheEntry = await tx.objectStore('cache').get(key);
+            
+            if (!cacheEntry) return null;
+            
+            // Verificar expiração
+            if (Date.now() > cacheEntry.expiration) {
+                await this.clearCachedData(key);
+                return null;
+            }
+            
+            console.log('🔍 Dados do cache:', key);
+            return cacheEntry.data;
+        } catch (error) {
+            console.error('❌ Erro ao recuperar cache:', error);
+            return null;
+        }
+    }
+
+    // Limpar cache expirado
+    async clearCachedData(key) {
+        if (!this.db) return;
+        
+        try {
+            const tx = this.db.transaction(['cache'], 'readwrite');
+            await tx.objectStore('cache').delete(key);
+        } catch (error) {
+            console.error('❌ Erro ao limpar cache:', error);
+        }
+    }
+
+    // Adicionar à fila de sincronização
+    async addToSyncQueue(action, data) {
+        if (!this.db) return;
+        
+        const syncItem = {
+            action,
+            data,
+            timestamp: Date.now(),
+            attempts: 0
+        };
+        
+        try {
+            const tx = this.db.transaction(['pending_sync'], 'readwrite');
+            const result = await tx.objectStore('pending_sync').add(syncItem);
+            console.log('⏳ Adicionado à fila de sincronização:', result);
+            
+            // Se estiver online, tentar sincronizar imediatamente
+            if (this.isOnline) {
+                setTimeout(() => this.syncPendingData(), 1000);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('❌ Erro ao adicionar à fila:', error);
+        }
+    }
+
+    // Sincronizar dados pendentes
+    async syncPendingData() {
+        if (!this.db || !this.isOnline) return;
+        
+        try {
+            const tx = this.db.transaction(['pending_sync'], 'readonly');
+            const pendingItems = await tx.objectStore('pending_sync').getAll();
+            
+            if (pendingItems.length === 0) return;
+            
+            console.log('🔄 Sincronizando', pendingItems.length, 'itens pendentes...');
+            
+            for (const item of pendingItems) {
+                try {
+                    await this.syncItem(item);
+                    await this.removeSyncItem(item.id);
+                } catch (error) {
+                    console.error('❌ Erro ao sincronizar item:', error);
+                    await this.updateSyncAttempts(item.id);
+                }
+            }
+            
+            if (window.app) {
+                window.app.showToast('Dados sincronizados! 🔄', 'success');
+                window.app.loadDashboardStats();
+                window.app.applyFilters();
+            }
+        } catch (error) {
+            console.error('❌ Erro na sincronização:', error);
+        }
+    }
+
+    // Sincronizar item individual
+    async syncItem(item) {
+        const { action, data } = item;
+        
+        switch (action) {
+            case 'CREATE_ITEM':
+                return await fetch('/api/inventory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            
+            case 'UPDATE_ITEM':
+                return await fetch(`/api/inventory/${data.qr_code}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            
+            case 'DELETE_ITEM':
+                return await fetch(`/api/inventory/${data.qr_code}`, {
+                    method: 'DELETE'
+                });
+            
+            default:
+                throw new Error('Ação não reconhecida: ' + action);
+        }
+    }
+
+    // Remover item da fila de sincronização
+    async removeSyncItem(id) {
+        if (!this.db) return;
+        
+        try {
+            const tx = this.db.transaction(['pending_sync'], 'readwrite');
+            await tx.objectStore('pending_sync').delete(id);
+        } catch (error) {
+            console.error('❌ Erro ao remover item da fila:', error);
+        }
+    }
+
+    // Atualizar tentativas de sincronização
+    async updateSyncAttempts(id) {
+        if (!this.db) return;
+        
+        try {
+            const tx = this.db.transaction(['pending_sync'], 'readwrite');
+            const store = tx.objectStore('pending_sync');
+            const item = await store.get(id);
+            
+            if (item) {
+                item.attempts++;
+                // Remover após 5 tentativas
+                if (item.attempts >= 5) {
+                    await store.delete(id);
+                } else {
+                    await store.put(item);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Erro ao atualizar tentativas:', error);
+        }
+    }
+
+    // Verificar se está online
+    isConnectionAvailable() {
+        return this.isOnline;
+    }
+
+    // Obter contagem de itens pendentes
+    async getPendingCount() {
+        if (!this.db) return 0;
+        
+        try {
+            const tx = this.db.transaction(['pending_sync'], 'readonly');
+            const count = await tx.objectStore('pending_sync').count();
+            return count;
+        } catch (error) {
+            console.error('❌ Erro ao contar pendências:', error);
+            return 0;
+        }
+    }
+}
+
+// Inicializar gerenciador offline
+const offlineManager = new OfflineManager();
+
 class InventoryApp {
     constructor() {
         this.currentQrCode = null;
         this.qrCodeScanner = null;
         this.isScanning = false;
+        this.offlineManager = offlineManager;
         
         this.initializeElements();
         this.bindEvents();
         this.loadDashboardStats();
         this.applyFilters(); // Use the new filter system instead of loadItems
+        this.showOfflineIndicator();
+        
+        // Verificar dados pendentes
+        this.checkPendingSync();
     }
 
     initializeElements() {
@@ -367,21 +689,25 @@ class InventoryApp {
         };
         
         try {
-            const response = await fetch('/api/inventory/item', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            });
+            // Usar método offline que tenta online primeiro
+            const result = await this.submitFormOffline(formData);
             
-            const result = await response.json();
-            
-            if (response.ok) {
-                this.showToast('Contagem salva com sucesso!', 'success');
+            if (result.success) {
+                const message = result.offline ? 
+                    'Contagem salva offline! Será sincronizada quando voltar online.' :
+                    'Contagem salva com sucesso!';
+                
+                this.showToast(message, 'success');
                 this.hideItemForm();
-                this.loadDashboardStats();
-                this.loadItems();
+                
+                // Atualizar interface
+                if (!result.offline) {
+                    await this.loadDashboardStats();
+                    await this.applyFilters();
+                } else {
+                    // Mostrar dados cached se offline
+                    await this.loadDashboardStatsOffline();
+                }
             } else {
                 this.showToast(result.error || 'Erro ao salvar contagem', 'error');
             }
@@ -405,14 +731,18 @@ class InventoryApp {
 
     async loadDashboardStats() {
         try {
-            const response = await fetch('/api/export/stats');
-            const stats = await response.json();
+            // Usar versão offline que tenta online primeiro
+            const stats = await this.loadDashboardStatsOffline();
             
             this.totalItemsEl.textContent = stats.totalItems?.count || 0;
             this.totalStockEl.textContent = stats.stockSummary?.grand_total || 0;
             this.todayCountsEl.textContent = stats.todayCounts?.count || 0;
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);
+            // Mostrar valores padrão se tudo falhar
+            this.totalItemsEl.textContent = '0';
+            this.totalStockEl.textContent = '0';
+            this.todayCountsEl.textContent = '0';
         }
     }
 
@@ -782,6 +1112,121 @@ class InventoryApp {
             console.error('Erro na exportação filtrada:', error);
             this.showToast('Erro na exportação', 'error');
         }
+    }
+
+    // Métodos para suporte offline
+    async showOfflineIndicator() {
+        await this.offlineManager.showConnectionStatus(navigator.onLine);
+    }
+
+    async checkPendingSync() {
+        const pendingCount = await this.offlineManager.getPendingCount();
+        if (pendingCount > 0) {
+            this.showToast(`${pendingCount} itens aguardando sincronização`, 'info');
+        }
+    }
+
+    // Override do submitForm para suporte offline
+    async submitFormOffline(formData) {
+        if (!this.offlineManager.isConnectionAvailable()) {
+            // Salvar offline
+            await this.offlineManager.addToSyncQueue('CREATE_ITEM', formData);
+            this.showToast('Item salvo offline. Será sincronizado quando voltar online.', 'info');
+            return { success: true, offline: true };
+        }
+        
+        // Tentar enviar online
+        try {
+            const response = await fetch('/api/inventory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            if (!response.ok) throw new Error('Erro na requisição');
+            
+            return await response.json();
+        } catch (error) {
+            // Se falhar, salvar offline
+            await this.offlineManager.addToSyncQueue('CREATE_ITEM', formData);
+            this.showToast('Erro na conexão. Item salvo offline.', 'warning');
+            return { success: true, offline: true };
+        }
+    }
+
+    // Override dos métodos de carregamento para cache
+    async loadDashboardStatsOffline() {
+        // Tentar carregar online primeiro
+        if (this.offlineManager.isConnectionAvailable()) {
+            try {
+                const response = await fetch('/api/inventory/stats');
+                if (response.ok) {
+                    const stats = await response.json();
+                    // Cachear os dados
+                    await this.offlineManager.cacheData('dashboard_stats', stats, 10);
+                    return stats;
+                }
+            } catch (error) {
+                console.log('Erro ao carregar stats online, tentando cache...');
+            }
+        }
+        
+        // Carregar do cache se offline ou se falhou
+        const cachedStats = await this.offlineManager.getCachedData('dashboard_stats');
+        if (cachedStats) {
+            this.showToast('Dados carregados do cache local', 'info');
+            return cachedStats;
+        }
+        
+        // Retornar dados padrão se nada disponível
+        return {
+            totalItems: 0,
+            totalUnrestrict: 0,
+            totalFOC: 0,
+            totalRFB: 0,
+            recentScans: 0
+        };
+    }
+
+    async loadItemsOffline(filters = {}) {
+        // Tentar carregar online primeiro
+        if (this.offlineManager.isConnectionAvailable()) {
+            try {
+                const queryParams = new URLSearchParams();
+                Object.keys(filters).forEach(key => {
+                    if (filters[key]) queryParams.append(key, filters[key]);
+                });
+                
+                const url = `/api/inventory/search?${queryParams}`;
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // Cachear os dados
+                    await this.offlineManager.cacheData(`items_${JSON.stringify(filters)}`, data, 5);
+                    return data;
+                }
+            } catch (error) {
+                console.log('Erro ao carregar itens online, tentando cache...');
+            }
+        }
+        
+        // Carregar do cache se offline ou se falhou
+        const cacheKey = `items_${JSON.stringify(filters)}`;
+        const cachedItems = await this.offlineManager.getCachedData(cacheKey);
+        
+        if (cachedItems) {
+            this.showToast('Dados carregados do cache local', 'info');
+            return cachedItems;
+        }
+        
+        // Retornar dados vazios se nada disponível
+        return {
+            items: [],
+            total: 0,
+            page: 1,
+            totalPages: 1
+        };
     }
 }
 
