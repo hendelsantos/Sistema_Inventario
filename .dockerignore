@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.DS_Store
+.env.local
+.env.*.local
+*.log
+database/*.db-wal
+database/*.db-shm
+public/css/style.css.backup
+update-colors.sh
+check-*.js
+migrate-db.js
+test-*.sh
+test-*.js
+server.log
